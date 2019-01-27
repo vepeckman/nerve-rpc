@@ -1,5 +1,5 @@
 import macros, json, strutils
-import webRPC/router
+import current/router
 
 macro rpc*(body: untyped): untyped =
   result = rpcServer(body)

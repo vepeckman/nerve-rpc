@@ -1,6 +1,6 @@
 import unittest
 
-import webRPC
+import current
 
 block:
   test "sanity":
