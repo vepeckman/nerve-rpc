@@ -2,17 +2,16 @@ import unittest
 
 import current
 
-block:
-  test "sanity":
-    rpc:
-      proc hello(name: string): string = "Hello " & name
-    check(handler(%* {"method": "hello", "params": {"name": "world"}}).to(string) == "Hello world")
+test "sanity":
+  rpc:
+    proc hello(name: string): string = "Hello " & name
+  check(handler(%* {"method": "hello", "params": {"name": "world"}}).to(string) == "Hello world")
 
-  test "Default params":
-    rpc:
-      proc hello(name: string, punc = "!"): string = "Hello " & name & punc
-    check(handler(%* {"method": "hello", "params": {"name": "world"}}).to(string) == "Hello world!")
-    check(handler(%* {"method": "hello", "params": {"name": "world", "punc": "."}}).to(string) == "Hello world.")
+test "Default params":
+  rpc:
+    proc hello(name: string, punc = "!"): string = "Hello " & name & punc
+  check(handler(%* {"method": "hello", "params": {"name": "world"}}).to(string) == "Hello world!")
+  check(handler(%* {"method": "hello", "params": {"name": "world", "punc": "."}}).to(string) == "Hello world.")
 
 test "Dispatch":
   rpc:

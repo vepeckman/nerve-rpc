@@ -1,7 +1,16 @@
 import macros, json, strutils
-import current/router
 
-macro rpc*(body: untyped): untyped =
-  result = rpcServer(body)
+when not defined(js):
+  import current/router
 
-export json, parseEnum
+  macro rpc*(body: untyped): untyped =
+    result = rpcServer(body)
+
+  export json, parseEnum
+else:
+  import current/client
+
+  macro rpc*(body: untyped): untyped =
+    result = rpcClient(body)
+
+  export json
