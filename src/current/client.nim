@@ -1,4 +1,4 @@
-import macros, jsffi, tables
+import macros, jsffi, tables, future
 import fetch
 
 proc procDefs(node: NimNode): seq[NimNode] =
@@ -37,8 +37,8 @@ proc procBody(p: NimNode): NimNode =
     req["method"] = cstring"POST"
     req["body"] = %* `paramJson`
     result = fetch(cstring("/rpc"), req)
-      .then(proc (resp: JsObject) = resp.json())
-      .then(proc (data: JsObject) = result = "hello")
+      .then((resp: JsObject) => resp.json())
+      .then((data: JsObject) => data.to(`retType`))
 
 proc rpcClient*(body: NimNode): NimNode =
   result = newStmtList()
