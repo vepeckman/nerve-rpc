@@ -1,4 +1,4 @@
-import macros, tables
+import macros, tables, asyncdispatch
 
 proc procDefs(node: NimNode): seq[NimNode] =
   # Gets all the proc definitions from the statement list
@@ -79,7 +79,7 @@ proc procWrapper(requestSym, responseSym, p: NimNode): NimNode =
 
   # Invoke the method with the params, convert to json, and return response
   result.add(quote do:
-      `responseSym` = % `methodCall`
+      `responseSym` = % waitFor `methodCall`
   )
 
 proc dispatch(procs: seq[NimNode], methodSym, requestSym, responseSym: NimNode): NimNode =

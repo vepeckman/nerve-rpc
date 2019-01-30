@@ -8,9 +8,10 @@ when not defined(js):
 
   export json, parseEnum
 else:
+  import jsffi
   import current/client
 
   macro rpc*(body: untyped): untyped =
     result = rpcClient(body)
 
-  export json
+  export json, jsffi

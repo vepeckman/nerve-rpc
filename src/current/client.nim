@@ -47,4 +47,3 @@ proc rpcClient*(body: NimNode): NimNode =
     let newBody = procBody(p)
     p[p.len - 1] = newBody
     result.add(p)
-  echo repr result
