@@ -1,4 +1,4 @@
-import current
+import ../src/current
 when not defined(js):
   import asyncdispatch
 else:

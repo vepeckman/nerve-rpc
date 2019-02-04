@@ -108,7 +108,7 @@ proc rpcServer*(body: NimNode): NimNode =
 
   body.add(quote do:
     `enumDeclaration`
-    proc handler(`requestSym`: JsonNode): JsonNode =
+    proc handler*(`requestSym`: JsonNode): JsonNode =
       var `responseSym`: JsonNode
       let `methodSym` = parseEnum[`enumSym`]("rpc" & `requestSym`["method"].getStr())
       `dispatchStatement`
