@@ -1,4 +1,4 @@
-import macros, jsffi, tables, future
+import macros, jsffi, json, tables, future
 import fetch
 
 proc procDefs(node: NimNode): seq[NimNode] =
@@ -23,22 +23,32 @@ proc getParams(formalParams: NimNode): seq[Table[string, NimNode]] =
 
 
 proc procBody(p: NimNode): NimNode =
-  let name = p.name
+  let nameStr = newStrLitNode(p.name.strVal)
   let formalParams = p.findChild(it.kind == nnkFormalParams)
   let retType = formalParams[0][1]
   let params = formalParams.getParams()
+  let req = genSym()
 
-  var paramJson = nnkTableConstr.newTree()
+  var paramJson = nnkStmtList.newTree()
   for param in params:
-    paramJson.add(nnkExprColonExpr.newTree(param["nameStr"], param["name"]))
+    let nameStr = param["nameStr"]
+    let name = param["name"]
+    paramJson.add(
+      quote do:
+        `req`["body"]["params"][`nameStr`] = `name`.toJs()
+    )
   
   result = quote do:
-    let req = newJsObject()
-    req["method"] = cstring"POST"
-    req["body"] = %* `paramJson`
-    result = fetch(cstring("/rpc"), req)
-      .then((resp: JsObject) => resp.json())
-      .then((data: JsObject) => data.to(`retType`))
+    let `req` = newJsObject()
+    `req`["method"] = cstring"POST"
+    `req`["body"] = newJsObject()
+    `req`["body"]["method"] = cstring`nameStr`
+    `req`["body"]["params"] = newJsObject()
+    `paramJson`
+    `req`["body"] = JSON.stringify(`req`["body"])
+    result = fetch(cstring("/rpc"), `req`)
+      .then((resp: JsObject) => respJson(resp))
+      .then((data: JsonNode) => data.to(`retType`))
 
 proc rpcClient*(body: NimNode): NimNode =
   result = newStmtList()
@@ -47,3 +57,4 @@ proc rpcClient*(body: NimNode): NimNode =
     let newBody = procBody(p)
     p[p.len - 1] = newBody
     result.add(p)
+  echo repr result

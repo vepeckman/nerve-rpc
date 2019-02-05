@@ -1,11 +1,15 @@
-import asynchttpserver, asyncdispatch, json
+import httpbeast, asyncdispatch, json, options
 import ../api
 
-var server = newAsyncHttpServer()
 proc cb(req: Request) {.async.} =
-  if req.url.path == "/rpc":
-    await req.respond(Http200, $handler(parseJson(req.body)))
+  case req.path.get()
+  of "/rpc":
+    req.send(Http200, $handler(parseJson(req.body.get())))
+  of "/client.js":
+    req.send(readFile("tests/nimcache/client.js"))
+  of "/":
+    req.send("""<html><head></head><body>Testing</body><script src="client.js"></script></html>""")
   else:
-    await req.respond(Http200, "Hello world")
+    req.send(Http404)
 
-waitFor server.serve(Port(1234), cb)
+run(cb, Settings(port: Port(1234), bindAddr: ""))
