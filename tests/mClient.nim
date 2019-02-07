@@ -1,10 +1,14 @@
 import ../src/current/fetch
 import api
-import unittest, sugar, jsffi
+import sugar, jsffi, asyncjs, unittest, macros
 
 var console {. importc, nodecl .}: JsObject
-suite "Sanity":
 
-  test "Basic":
-    discard hello("nic")
-      .then((greeting: string) => console.log(greeting))
+
+expandMacros:
+
+  suite "Sanity":
+
+    test "Basic":
+
+      check(true == true)
