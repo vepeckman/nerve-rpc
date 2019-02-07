@@ -1,4 +1,4 @@
-import macros, jsffi, json, tables, future
+import macros, jsffi, tables
 import fetch
 
 proc procDefs(node: NimNode): seq[NimNode] =
@@ -47,8 +47,8 @@ proc procBody(p: NimNode): NimNode =
     `paramJson`
     `req`["body"] = JSON.stringify(`req`["body"])
     result = fetch(cstring("/rpc"), `req`)
-      .then((resp: JsObject) => respJson(resp))
-      .then((data: JsonNode) => data.to(`retType`))
+      .then(proc (resp: JsObject): JsObject = respJson(resp))
+      .then(proc (data: JsObject): `retType` = data.to(`retType`))
 
 proc rpcClient*(body: NimNode): NimNode =
   result = newStmtList()
@@ -57,4 +57,3 @@ proc rpcClient*(body: NimNode): NimNode =
     let newBody = procBody(p)
     p[p.len - 1] = newBody
     result.add(p)
-  echo repr result
