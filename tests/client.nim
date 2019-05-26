@@ -5,10 +5,12 @@ import sugar, jsffi, asyncjs, unittest, macros
 var console {. importc, nodecl .}: JsObject
 
 
-expandMacros:
-
+proc main() {.async.} =
   suite "Sanity":
 
-    test "Basic":
+    test "Hello":
+      let msg = await hello("Nic")
+      check(msg == "Hello Nic")
 
-      check(true == true)
+
+discard main()

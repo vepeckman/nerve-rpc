@@ -115,3 +115,5 @@ proc rpcServer*(body: NimNode): NimNode =
       result = `responseSym`
   )
   result = body
+  if defined(nerveRpcDebug):
+    echo repr body
