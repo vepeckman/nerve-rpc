@@ -6,4 +6,7 @@ proc then*[T, R](promise: Future[T], next: proc (data: T): Future[R]): Future[R]
 proc then*[T, R](promise: Future[T], next: proc (data: T): R): Future[R] {. importcpp: "#.then(@)" .}
 proc then*[T](promise: Future[T], next: proc(data: T)): Future[void] {. importcpp: "#.then(@)" .}
 
+var JSON* {. importc, nodecl .}: JsObject
+proc respJson*(data: JsObject): JsObject {. importcpp: "#.json()" .}
+
 export Future
