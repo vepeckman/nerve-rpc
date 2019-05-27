@@ -1,4 +1,5 @@
 import macros, tables, asyncdispatch
+import common
 
 proc procDefs(node: NimNode): seq[NimNode] =
   # Gets all the proc definitions from the statement list
@@ -95,25 +96,30 @@ proc dispatch(procs: seq[NimNode], methodSym, requestSym, responseSym: NimNode):
         wrapper
     ))
 
-proc rpcServer*(body: NimNode): NimNode =
+proc rpcServer*(name, body: NimNode): NimNode =
   let 
     enumSym = genSym(nskType) # Type name the enum used to dispatch procs
     methodSym = genSym(nskLet) # Variable that holds the requested method
     requestSym = ident("request") # The request parameter
     responseSym = ident("response") # The response return value
+    routerSym = rpcRouterProcName(name)
   let procs = procDefs(body)
 
   let dispatchStatement = dispatch(procs, methodSym, requestSym, responseSym)
   let enumDeclaration = enumDeclaration(enumSym, procs)
 
+  body.add(rpcServiceType(name, procs))
+  body.add(rpcServiceObject(name, procs))
+
   body.add(quote do:
     `enumDeclaration`
-    proc handler*(`requestSym`: JsonNode): JsonNode =
+    proc `routerSym`*(`requestSym`: JsonNode): JsonNode =
       var `responseSym`: JsonNode
       let `methodSym` = parseEnum[`enumSym`]("rpc" & `requestSym`["method"].getStr())
       `dispatchStatement`
       result = `responseSym`
   )
   result = body
+
   if defined(nerveRpcDebug):
-    echo repr body
+    echo repr result

@@ -6,11 +6,11 @@ else:
   import asyncjs
   type kstring* = cstring
 
-rpc:
-  proc hello*(name: kstring): Future[kstring] =
+rpc test:
+  proc hello(name: kstring): Future[kstring] =
     result = newFuture[kstring]()
     result.complete("Hello " & name)
   
-  proc add*(x, y: int): Future[int] =
+  proc add(x, y: int): Future[int] =
     result = newFuture[int]()
     result.complete(x + y)
