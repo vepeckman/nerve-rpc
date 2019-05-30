@@ -13,7 +13,7 @@ else:
   import current/client
 
   macro rpc*(name, body: untyped): untyped =
-    result = rpcClient(body)
+    result = rpcClient(name, body)
 
   export json, jsffi
 

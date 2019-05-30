@@ -1,5 +1,5 @@
 import macros, jsffi, tables
-import fetch
+import fetch, common
 
 proc procDefs(node: NimNode): seq[NimNode] =
   # Gets all the proc definitions from the statement list
@@ -50,12 +50,14 @@ proc procBody(p: NimNode): NimNode =
       .then(proc (resp: JsObject): JsObject = respJson(resp))
       .then(proc (data: JsObject): `retType` = data.to(`retType`))
 
-proc rpcClient*(body: NimNode): NimNode =
+proc rpcClient*(name, body: NimNode): NimNode =
   result = newStmtList()
   let procs = procDefs(body)
   for p in procs:
     let newBody = procBody(p)
     p[p.len - 1] = newBody
     result.add(p)
+  result.add(rpcServiceType(name, procs))
+  result.add(rpcServiceObject(name, procs))
   if defined(nerveRpcDebug):
     echo repr result

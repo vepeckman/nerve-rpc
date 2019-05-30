@@ -9,7 +9,7 @@ proc main() {.async.} =
   suite "Sanity":
 
     test "Hello":
-      let msg = await hello("Nic")
+      let msg = await example.hello("Nic")
       check(msg == "Hello Nic")
 
 
