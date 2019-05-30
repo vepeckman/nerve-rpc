@@ -96,7 +96,7 @@ proc dispatch(procs: seq[NimNode], methodSym, requestSym, responseSym: NimNode):
         wrapper
     ))
 
-proc rpcServer*(name, body: NimNode): NimNode =
+proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
   let 
     enumSym = genSym(nskType) # Type name the enum used to dispatch procs
     methodSym = genSym(nskLet) # Variable that holds the requested method
@@ -109,7 +109,8 @@ proc rpcServer*(name, body: NimNode): NimNode =
   let enumDeclaration = enumDeclaration(enumSym, procs)
 
   body.add(rpcServiceType(name, procs))
-  body.add(rpcServiceObject(name, procs))
+  body.add(rpcServiceObject(name, procs, uri))
+  body.add(rpcUriConst(name, uri))
 
   body.add(quote do:
     `enumDeclaration`

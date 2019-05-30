@@ -6,7 +6,7 @@ else:
   import asyncjs
   type kstring* = cstring
 
-rpc example:
+rpc example, "/api":
   proc hello(name: kstring): Future[kstring] =
     result = newFuture[kstring]()
     result.complete("Hello " & name)

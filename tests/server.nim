@@ -3,8 +3,9 @@ import api, ../src/current
 
 proc cb(req: Request) {.async.} =
   case req.path.get()
-  of "/rpc":
-    req.send(Http200, $example.routeRpc(req.body.get()))
+  of example.rpcUri:
+    let rpcRequest = req.body.get().parseJson()
+    req.send(Http200, $example.routeRpc(rpcRequest))
   of "/client.js":
     const headers = "Content-Type: application/javascript"
     req.send(Http200, readFile("tests/nimcache/client.js"), headers)

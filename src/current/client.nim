@@ -22,7 +22,7 @@ proc getParams(formalParams: NimNode): seq[Table[string, NimNode]] =
         )
 
 
-proc procBody(p: NimNode): NimNode =
+proc procBody(p: NimNode, uri = "/rpc"): NimNode =
   let nameStr = newStrLitNode(p.name.strVal)
   let formalParams = p.findChild(it.kind == nnkFormalParams)
   let retType = formalParams[0][1]
@@ -46,18 +46,18 @@ proc procBody(p: NimNode): NimNode =
     `req`["body"]["params"] = newJsObject()
     `paramJson`
     `req`["body"] = JSON.stringify(`req`["body"])
-    result = fetch(cstring("/rpc"), `req`)
+    result = fetch(cstring(`uri`), `req`)
       .then(proc (resp: JsObject): JsObject = respJson(resp))
       .then(proc (data: JsObject): `retType` = data.to(`retType`))
 
-proc rpcClient*(name, body: NimNode): NimNode =
+proc rpcClient*(name: NimNode, uri: string, body: NimNode): NimNode =
   result = newStmtList()
   let procs = procDefs(body)
   for p in procs:
-    let newBody = procBody(p)
+    let newBody = procBody(p, uri)
     p[p.len - 1] = newBody
     result.add(p)
   result.add(rpcServiceType(name, procs))
-  result.add(rpcServiceObject(name, procs))
+  result.add(rpcServiceObject(name, procs, uri))
   if defined(nerveRpcDebug):
     echo repr result
