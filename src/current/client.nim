@@ -1,6 +1,8 @@
 import macros, jsffi, tables
 import fetch, common
 
+proc respToJson*(resp: JsObject): JsObject = respJson(resp)
+
 proc procDefs(node: NimNode): seq[NimNode] =
   # Gets all the proc definitions from the statement list
   for child in node:
@@ -46,9 +48,10 @@ proc procBody(p: NimNode, uri = "/rpc"): NimNode =
     `req`["body"]["params"] = newJsObject()
     `paramJson`
     `req`["body"] = JSON.stringify(`req`["body"])
-    result = fetch(cstring(`uri`), `req`)
-      .then(proc (resp: JsObject): JsObject = respJson(resp))
-      .then(proc (data: JsObject): `retType` = data.to(`retType`))
+    result = cast[Future[`retType`]](
+      fetch(cstring(`uri`), `req`)
+        .then(respToJson)
+    )
 
 proc rpcClient*(name: NimNode, uri: string, body: NimNode): NimNode =
   result = newStmtList()

@@ -12,5 +12,9 @@ proc main() {.async.} =
       let msg = await example.hello("Nic")
       check(msg == "Hello Nic")
 
+    test "Person":
+      let person = await example.newPerson("Nic", 24)
+      check(person.name == "Nic")
+
 
 discard main()
