@@ -1,5 +1,5 @@
 import httpbeast, asyncdispatch, json, options
-import api, ../src/current
+import api, current/utils
 
 proc cb(req: Request) {.async.} =
   case req.path.get()

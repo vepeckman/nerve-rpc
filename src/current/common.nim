@@ -8,11 +8,6 @@ proc rpcRouterProcName*(name: NimNode): NimNode =
   let nameStr = strVal(name)
   result = ident("NerveRpc" & nameStr & "Router")
 
-macro routeRpc*(rpc: RpcServer, req: JsonNode): untyped =
-  let routerProc = rpc.rpcRouterProcName
-  result = quote do:
-    `routerProc`(`req`)
-
 proc rpcUriConstName*(name: NimNode): NimNode =
   let nameStr = strVal(name)
   result = ident("NerveRpc" & nameStr & "Uri")
@@ -21,11 +16,6 @@ proc rpcUriConst*(name: NimNode, uri: string): NimNode =
   let uriConst = name.rpcUriConstName()
   result = quote do:
     const `uriConst`* = `uri`
-
-macro rpcUri*(rpc: RpcServer): untyped =
-  let uriConst = rpc.rpcUriConstName
-  result = quote do:
-    `uriConst`
 
 proc rpcServiceName*(name: NimNode): NimNode =
   let nameStr = strVal(name)

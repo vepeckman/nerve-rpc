@@ -1,7 +1,5 @@
 import macros, jsffi, tables
-import fetch, common
-
-proc respToJson*(resp: JsObject): JsObject = respJson(resp)
+import utils, common
 
 proc procDefs(node: NimNode): seq[NimNode] =
   # Gets all the proc definitions from the statement list

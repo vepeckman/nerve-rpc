@@ -1,9 +1,5 @@
-import current/fetch
+import asyncjs, unittest
 import api
-import sugar, jsffi, asyncjs, unittest, macros
-
-var console {. importc, nodecl .}: JsObject
-
 
 proc main() {.async.} =
   suite "Sanity":

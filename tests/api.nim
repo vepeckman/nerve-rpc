@@ -1,10 +1,4 @@
-import ../src/current
-when not defined(js):
-  import asyncdispatch
-  type kstring* = string
-else:
-  import asyncjs
-  type kstring* = cstring
+import current, current/utils
 
 type
   Person* = ref object
