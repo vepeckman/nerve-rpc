@@ -13,3 +13,7 @@ requires "nim >= 0.19.6"
 
 
 requires "httpbeast 0.2.1"
+
+task itests, "Runs intergration tests":
+  exec "nimble js tests/client.nim"
+  exec "nimble c -r tests/server.nim"

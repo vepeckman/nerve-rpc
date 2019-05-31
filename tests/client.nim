@@ -1,4 +1,4 @@
-import ../src/current/fetch
+import current/fetch
 import api
 import sugar, jsffi, asyncjs, unittest, macros
 
