@@ -8,7 +8,7 @@ type
     self*: Person
     children*: seq[Person]
 
-rpc example, "/api":
+rpc PersonService, "/api/person":
   proc hello(name = kstring("World")): Future[kstring] =
     result = newFuture[kstring]()
     result.complete("Hello " & name)
