@@ -1,5 +1,5 @@
 import asyncjs, unittest
-import personService, greetingService
+import personService, greetingService, fileService
 
 proc main() {.async.} =
   suite "Sanity":
@@ -28,6 +28,9 @@ proc main() {.async.} =
       let parent = await PersonService.newParent(person, child)
       check(parent.self.name == "Alex")
       check(parent.children[0].name == "James")
+
+    test "Error":
+      discard #await FileService.saveFile("missing.txt", "failure")
 
   suite "Proc arguments":
 

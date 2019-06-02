@@ -1,14 +1,17 @@
 import httpbeast, asyncdispatch, json, options
-import personService, greetingService, current/utils
+import personService, greetingService, fileService, current/utils
 
 proc cb(req: Request) {.async.} =
   case req.path.get()
   of PersonService.rpcUri:
     let rpcRequest = req.body.get().parseJson()
-    req.send(Http200, $PersonService.routeRpc(rpcRequest))
+    req.send($ await PersonService.routeRpc(rpcRequest))
   of GreetingService.rpcUri:
     let rpcRequest = req.body.get().parseJson()
-    req.send($GreetingService.routeRpc(rpcRequest))
+    req.send($ await GreetingService.routeRpc(rpcRequest))
+  of FileService.rpcUri:
+    let rpcRequest = req.body.get().parseJson()
+    req.send($ await FileService.routeRpc(rpcRequest))
   of "/client.js":
     const headers = "Content-Type: application/javascript"
     req.send(Http200, readFile("tests/nimcache/client.js"), headers)
