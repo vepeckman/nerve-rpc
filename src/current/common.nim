@@ -19,7 +19,7 @@ proc rpcUriConst*(name: NimNode, uri: string): NimNode =
 
 proc rpcServiceName*(name: NimNode): NimNode =
   let nameStr = strVal(name)
-  result = ident("NerveRpc" & nameStr & "Service")
+  result = ident("NerveRpc" & nameStr & "Object")
 
 proc rpcServiceType*(name: NimNode, procs: seq[NimNode]): NimNode =
   let typeName = rpcServiceName(name)

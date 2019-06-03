@@ -1,4 +1,4 @@
-import macros, tables, asyncdispatch
+import macros, tables, asyncdispatch, strutils
 import common
 
 proc procDefs(node: NimNode): seq[NimNode] =
@@ -7,8 +7,8 @@ proc procDefs(node: NimNode): seq[NimNode] =
     if child.kind == nnkProcDef:
       result.add(child)
 
-const dispatchPrefix = "nerveRpc"
-proc dispatchName(node: NimNode): NimNode = ident(dispatchPrefix & node.name.strVal)
+const dispatchPrefix = "NerveRpc"
+proc dispatchName(node: NimNode): NimNode = ident(dispatchPrefix & node.name.strVal.capitalizeAscii)
 
 proc enumDeclaration(enumName: NimNode, procs: seq[NimNode]): NimNode =
   # The enum used to dispatch methods
