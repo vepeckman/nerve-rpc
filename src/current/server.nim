@@ -81,7 +81,7 @@ proc procWrapper(requestSym, p: NimNode): NimNode =
 
   # Invoke the method with the params, convert to json, and return response
   result.add(quote do:
-      result = % await `methodCall`
+      result["result"] = % await `methodCall`
   )
 
 proc dispatch(procs: seq[NimNode], methodSym, requestSym: NimNode): NimNode =
@@ -115,6 +115,10 @@ proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
   body.add(quote do:
     `enumDeclaration`
     proc `routerSym`*(`requestSym`: JsonNode): Future[JsonNode] {.async.} =
+      result = %* {
+        "jsonrpc": "2.0",
+        "id": `requestSym`["id"]
+      }
       let `methodSym` = parseEnum[`enumSym`](`dispatchPrefix` & `requestSym`["method"].getStr())
       `dispatchStatement`
   )

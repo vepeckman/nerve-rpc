@@ -15,6 +15,7 @@ when defined(js):
   var JSON* {. importc, nodecl .}: JsObject
   proc respJson*(data: JsObject): JsObject {. importcpp: "#.json()" .}
   proc respToJson*(resp: JsObject): JsObject = respJson(resp)
+  proc handleRpcResponse*[T](rpcResponse: JsObject): T = rpcResponse["result"].to(T)
 
 
   export asyncjs
