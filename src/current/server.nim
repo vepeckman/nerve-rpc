@@ -65,7 +65,7 @@ proc unboxParam(param: Table[string, NimNode], requestSym: NimNode): NimNode =
       `requestSym`["params"][`nameStr`].to(`ntype`)
     )
 
-proc procWrapper(requestSym, responseSym, p: NimNode): NimNode =
+proc procWrapper(requestSym, p: NimNode): NimNode =
   # This wrapper gets the parameters from the request and uses them to invoke the proc
   result = nnkStmtList.newTree()
   var methodCall = nnkCall.newTree(p.name)
@@ -81,16 +81,16 @@ proc procWrapper(requestSym, responseSym, p: NimNode): NimNode =
 
   # Invoke the method with the params, convert to json, and return response
   result.add(quote do:
-      `responseSym` = % await `methodCall`
+      result = % await `methodCall`
   )
 
-proc dispatch(procs: seq[NimNode], methodSym, requestSym, responseSym: NimNode): NimNode =
+proc dispatch(procs: seq[NimNode], methodSym, requestSym: NimNode): NimNode =
   # Create the case statement used to dispatch proc
   result = nnkCaseStmt.newTree(methodSym)
 
   for p in procs:
     # Add the branch that dispatches the proc
-    let wrapper = procWrapper(requestSym, responseSym, p)
+    let wrapper = procWrapper(requestSym, p)
     result.add(
       nnkOfBranch.newTree(
         dispatchName(p),
@@ -102,11 +102,10 @@ proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
     enumSym = genSym(nskType) # Type name the enum used to dispatch procs
     methodSym = genSym(nskLet) # Variable that holds the requested method
     requestSym = ident("request") # The request parameter
-    responseSym = ident("response") # The response return value
     routerSym = rpcRouterProcName(name)
   let procs = procDefs(body)
 
-  let dispatchStatement = dispatch(procs, methodSym, requestSym, responseSym)
+  let dispatchStatement = dispatch(procs, methodSym, requestSym)
   let enumDeclaration = enumDeclaration(enumSym, procs)
 
   body.add(rpcServiceType(name, procs))
@@ -116,10 +115,8 @@ proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
   body.add(quote do:
     `enumDeclaration`
     proc `routerSym`*(`requestSym`: JsonNode): Future[JsonNode] {.async.} =
-      var `responseSym`: JsonNode
       let `methodSym` = parseEnum[`enumSym`](`dispatchPrefix` & `requestSym`["method"].getStr())
       `dispatchStatement`
-      result = `responseSym`
   )
   result = body
 
