@@ -7,7 +7,8 @@ proc procDefs(node: NimNode): seq[NimNode] =
     if child.kind == nnkProcDef:
       result.add(child)
 
-proc dispatchName(node: NimNode): NimNode = ident("rpc" & node.name.strVal)
+const dispatchPrefix = "nerveRpc"
+proc dispatchName(node: NimNode): NimNode = ident(dispatchPrefix & node.name.strVal)
 
 proc enumDeclaration(enumName: NimNode, procs: seq[NimNode]): NimNode =
   # The enum used to dispatch methods
@@ -116,7 +117,7 @@ proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
     `enumDeclaration`
     proc `routerSym`*(`requestSym`: JsonNode): Future[JsonNode] {.async.} =
       var `responseSym`: JsonNode
-      let `methodSym` = parseEnum[`enumSym`]("rpc" & `requestSym`["method"].getStr())
+      let `methodSym` = parseEnum[`enumSym`](`dispatchPrefix` & `requestSym`["method"].getStr())
       `dispatchStatement`
       result = `responseSym`
   )
