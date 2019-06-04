@@ -26,7 +26,7 @@ proc paramType(param: NimNode): NimNode =
   if param[typeIdx].kind == nnkEmpty:
     var defaultParam = param[defaultIdx]
     result = quote do:
-      type(`defaultParam`)
+      typeof(`defaultParam`)
   else:
     result = param[typeIdx]
 
@@ -56,9 +56,10 @@ proc unboxParam(param: Table[string, NimNode], requestSym: NimNode): NimNode =
 
   if defaultVal.kind != nnkEmpty:
     result.add(quote do:
+      let default = `defaultVal`
       if `requestSym`["params"].hasKey(`nameStr`):
-        `requestSym`["params"][`nameStr`].to(`ntype`)
-      else: `defaultVal`
+        `requestSym`["params"][`nameStr`].to(typeof(default))
+      else: default
     )
   else:
     result.add(quote do:
