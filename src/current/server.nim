@@ -1,4 +1,4 @@
-import macros, tables, asyncdispatch, strutils
+import macros, tables, strutils
 import common
 
 proc procDefs(node: NimNode): seq[NimNode] =
@@ -7,7 +7,6 @@ proc procDefs(node: NimNode): seq[NimNode] =
     if child.kind == nnkProcDef:
       result.add(child)
 
-const dispatchPrefix = "NerveRpc"
 proc dispatchName(node: NimNode): NimNode = ident(dispatchPrefix & node.name.strVal.capitalizeAscii)
 
 proc enumDeclaration(enumName: NimNode, procs: seq[NimNode]): NimNode =
@@ -47,24 +46,18 @@ proc getParams(formalParams: NimNode): seq[Table[string, NimNode]] =
           }.toTable
         )
 
-proc unboxParam(param: Table[string, NimNode], requestSym: NimNode): NimNode =
+proc unboxExpression(param: Table[string, NimNode], requestSym: NimNode): NimNode =
   # Retrieve the param from the request, convert to Nim type
-  result = nnkStmtList.newTree()
   var nameStr = param["nameStr"]
   var ntype = param["type"]
   var defaultVal = param["defaultVal"]
 
   if defaultVal.kind != nnkEmpty:
-    result.add(quote do:
-      let default = `defaultVal`
-      if `requestSym`["params"].hasKey(`nameStr`):
-        `requestSym`["params"][`nameStr`].to(typeof(default))
-      else: default
-    )
+    result = quote do:
+      nerveUnboxParameter(`requestSym`, `nameStr`, `defaultVal`)
   else:
-    result.add(quote do:
-      `requestSym`["params"][`nameStr`].to(`ntype`)
-    )
+    result = quote do:
+      nerveUnboxParameter[`ntype`](`requestSym`, `nameStr`)
 
 proc procWrapper(requestSym, p: NimNode): NimNode =
   # This wrapper gets the parameters from the request and uses them to invoke the proc
@@ -74,9 +67,9 @@ proc procWrapper(requestSym, p: NimNode): NimNode =
 
   for param in params:
     var name = param["name"]
-    let unboxExpression = param.unboxParam(requestSym)
+    let unboxExpr = param.unboxExpression(requestSym)
     result.add(quote do:
-      let `name` = `unboxExpression`
+      let `name` = `unboxExpr`
     )
     methodCall.add(name)
 
@@ -120,8 +113,11 @@ proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
         "jsonrpc": "2.0",
         "id": `requestSym`["id"]
       }
-      let `methodSym` = parseEnum[`enumSym`](`dispatchPrefix` & `requestSym`["method"].getStr())
-      `dispatchStatement`
+      try:
+        let `methodSym` = nerveGetMethod[`enumSym`](`requestSym`)
+        `dispatchStatement`
+      except:
+        echo "oh no"
   )
   result = body
 

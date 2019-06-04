@@ -1,5 +1,5 @@
-import macros, jsffi, tables
-import utils, common
+import macros, tables
+import common
 
 proc procDefs(node: NimNode): seq[NimNode] =
   # Gets all the proc definitions from the statement list

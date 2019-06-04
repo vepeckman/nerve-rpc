@@ -1,6 +1,8 @@
 import macros
 import json
 
+const dispatchPrefix* = "NerveRpc"
+
 type RpcServer* = object of RootObj
   uri*: string
 

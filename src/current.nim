@@ -1,13 +1,13 @@
 import macros
 
 when not defined(js):
-  import json, strutils
-  import current/server
+  import json
+  import current/server, current/runtime
 
   macro rpc*(name, uri, body: untyped): untyped =
     result = rpcServer(name, uri.strVal(), body)
 
-  export json, parseEnum
+  export json, runtime
 else:
   import jsffi
   import current/client
