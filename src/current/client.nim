@@ -42,6 +42,7 @@ proc procBody(p: NimNode, uri = "/rpc"): NimNode =
     let `req` = newJsObject()
     `req`["method"] = cstring"POST"
     `req`["body"] = newJsObject()
+    `req`["body"]["jsonrpc"] = cstring("2.0")
     `req`["body"]["id"] = 0
     `req`["body"]["method"] = cstring`nameStr`
     `req`["body"]["params"] = newJsObject()

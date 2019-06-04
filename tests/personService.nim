@@ -9,6 +9,10 @@ type
     children*: seq[Person]
 
 rpc PersonService, "/api/person":
+  proc helloWorld(): Future[kstring] =
+    result = newFuture[kstring]()
+    result.complete("Hello world")
+
   proc hello(name = kstring("World")): Future[kstring] =
     result = newFuture[kstring]()
     result.complete("Hello " & name)

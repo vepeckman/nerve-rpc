@@ -44,5 +44,9 @@ proc main() {.async.} =
       check(g3 == "Yo World")
       check(g4 == "Goodday child")
 
+    test "No params":
+      let msg = await PersonService.helloWorld()
+      check(msg == "Hello world")
+
 
 discard main()
