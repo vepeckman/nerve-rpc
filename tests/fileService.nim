@@ -1,7 +1,7 @@
 import current, current/utils
 when not defined(js):
   proc failure() =
-    assert(true == false)
+    raise new(KeyError)
 
 rpc FileService, "/api/file":
 

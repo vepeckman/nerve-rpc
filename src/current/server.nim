@@ -109,15 +109,16 @@ proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
   body.add(quote do:
     `enumDeclaration`
     proc `routerSym`*(`requestSym`: JsonNode): Future[JsonNode] {.async.} =
-      result = %* {
-        "jsonrpc": "2.0",
-        "id": `requestSym`["id"]
-      }
+      result = %* {"jsonrpc": "2.0", "id": `requestSym`["id"]}
       try:
         let `methodSym` = nerveGetMethod[`enumSym`](`requestSym`)
         `dispatchStatement`
-      except:
-        echo "oh no"
+      except DispatchError as e:
+        result["error"] = newNerveError(-32601, "Method not found", e)
+      except ParameterError as e:
+        result["error"] = newNerveError(-32602, "Invalid params", e)
+      except CatchableError as e:
+        result["error"] = newNerveError(-32000, "Server error", e)
   )
   result = body
 
