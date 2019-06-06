@@ -35,4 +35,9 @@ else:
     result = quote do:
       `routerProc`(`req`)
 
-  export asyncdispatch
+  macro routeRpc*(rpc: RpcServer, req: string): untyped =
+    let routerProc = rpc.rpcRouterProcName
+    result = quote do:
+      `routerProc`(`req`)
+
+  export asyncdispatch, RpcServer

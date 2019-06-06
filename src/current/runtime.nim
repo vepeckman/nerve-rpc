@@ -2,9 +2,12 @@ import json, strutils
 import common
 
 type 
+  RequestFormatError* = ref object of CatchableError
   DispatchError* = ref object of CatchableError
   ParameterError* = ref object of CatchableError
-  MethodError* = ref object of CatchableError
+
+proc nerveValidateRequest*(req: JsonNode): bool =
+  req.hasKey("jsonrpc") and req["jsonrpc"].getStr() == "2.0" and req.hasKey("id")
 
 proc nerveGetMethod*[T: enum](req: JsonNode): T =
   try:
@@ -29,6 +32,12 @@ proc nerveUnboxParameter*[T](req: JsonNode, param: string): T =
     let msg = "Error in param '" & param & "': " & getCurrentExceptionMsg()
     raise ParameterError(msg: msg, parent: getCurrentException())
 
+proc newNerveError*(code: int, message: string): JsonNode =
+  %* {
+    "code": code,
+    "message": message
+  }
+
 proc newNerveError*(code: int, message: string, e: ref CatchableError): JsonNode =
   %* {
     "code": code,
@@ -38,3 +47,5 @@ proc newNerveError*(code: int, message: string, e: ref CatchableError): JsonNode
       "stackTrace": if defined(release): "" else: $e.getStackTraceEntries().join("\n")
     }
   }
+
+export parseJson

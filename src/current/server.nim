@@ -97,6 +97,7 @@ proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
     methodSym = genSym(nskLet) # Variable that holds the requested method
     requestSym = ident("request") # The request parameter
     routerSym = rpcRouterProcName(name)
+    routerName = routerSym.strVal()
   let procs = procDefs(body)
 
   let dispatchStatement = dispatch(procs, methodSym, requestSym)
@@ -109,7 +110,10 @@ proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
   body.add(quote do:
     `enumDeclaration`
     proc `routerSym`*(`requestSym`: JsonNode): Future[JsonNode] {.async.} =
-      result = %* {"jsonrpc": "2.0", "id": `requestSym`["id"]}
+      result = %* {"jsonrpc": "2.0"}
+      if not nerveValidateRequest(`requestSym`):
+        result["id"] = if `requestSym`.hasKey("id"): `requestSym`["id"] else: newJNull()
+        result["error"] = newNerveError(-32600, "Invalid Request")
       try:
         let `methodSym` = nerveGetMethod[`enumSym`](`requestSym`)
         `dispatchStatement`
@@ -119,6 +123,16 @@ proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
         result["error"] = newNerveError(-32602, "Invalid params", e)
       except CatchableError as e:
         result["error"] = newNerveError(-32000, "Server error", e)
+
+    proc `routerSym`*(`requestSym`: string): Future[JsonNode] =
+      try:
+        let requestJson = parseJson(`requestSym`)
+        result = `routerSym`(requestJson)
+      except CatchableError as e:
+        result = newFuture[JsonNode](`routerName`)
+        var response = %* {"jsonrpc": "2.0", "id": newJNull()}
+        response["error"] = newNerveError(-32700, "Parse error", e)
+        result.complete(response)
   )
   result = body
 
