@@ -39,18 +39,16 @@ proc newNerveError*(code: int, message: string): JsonNode =
   }
 
 proc newNerveError*(code: int, message: string, e: ref CatchableError): JsonNode =
-  let dir = getCurrentDir()
   let stackTrace = e.getStackTraceEntries()
-    .filterIt(`$`(it.filename).find(dir) != -1 and 
-              `$`(it.procname).find(dispatchPrefix) == -1)
-    .mapIt($it.filename & "(" & $it.line & ")" & "  " & $it.procname)
-    .join("\n")
-  return %* {
+  let dir = getCurrentDir()
+  echo stackTrace.filterIt(string(it.filename).find(dir) != -1)
+
+  %* {
     "code": code,
     "message": message,
     "data": {
       "msg": e.msg,
-      "stackTrace": if defined(release): "" else: stackTrace
+      "stackTrace": if defined(release): "" else: $e.getStackTraceEntries().join("\n")
     }
   }
 
