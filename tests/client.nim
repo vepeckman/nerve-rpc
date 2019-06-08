@@ -30,7 +30,7 @@ proc main() {.async.} =
       check(parent.children[0].name == "James")
 
     test "Error":
-      discard #await FileService.saveFile("missing.txt", "failure")
+      discard await FileService.saveFile("missing.txt", "failure")
 
   suite "Proc arguments":
 

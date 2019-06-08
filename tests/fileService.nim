@@ -1,11 +1,8 @@
 import current, current/utils
-when not defined(js):
-  proc failure() =
-    raise new(KeyError)
 
 rpc FileService, "/api/file":
 
   proc saveFile(filename, data: kstring): Future[kstring]  =
-    failure()
+    let file = open(filename)
     result = newFuture[kstring]()
     result.complete("done")

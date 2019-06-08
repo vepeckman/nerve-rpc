@@ -12,10 +12,25 @@ when defined(js):
   proc then*[T, R](promise: Future[T], next: proc (data: T): R): Future[R] {. importcpp: "#.then(@)" .}
   proc then*[T](promise: Future[T], next: proc(data: T)): Future[void] {. importcpp: "#.then(@)" .}
 
+  proc Boolean*(o: JsObject): bool {. importc .}
   var JSON* {. importc, nodecl .}: JsObject
+
+  type
+    InvalidResponseError = ref object of CatchableError
+    RpcError = ref object of CatchableError
+
   proc respJson*(data: JsObject): JsObject {. importcpp: "#.json()" .}
-  proc respToJson*(resp: JsObject): JsObject = respJson(resp)
-  proc handleRpcResponse*[T](rpcResponse: JsObject): T = rpcResponse["result"].to(T)
+  proc respToJson*(resp: JsObject): JsObject =
+    if Boolean(resp.ok):
+      return respJson(resp)
+    let msg = "Invalid Response: Server responsed with code " & $to(resp.status, int)
+    raise InvalidResponseError(msg: msg)
+  proc handleRpcResponse*[T](rpcResponse: JsObject): T =
+    let error = rpcResponse["error"]
+    if Boolean(error):
+      let msg = $error.message.to(cstring) & ": " & $error.data.msg.to(cstring) & "\n" & $error.data.stackTrace.to(cstring) & "\n"
+      raise RpcError(msg: msg)
+    rpcResponse["result"].to(T)
 
 
   export asyncjs
