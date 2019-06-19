@@ -9,6 +9,8 @@ proc procDefs(node: NimNode): seq[NimNode] =
 
 proc getParams(formalParams: NimNode): seq[Table[string, NimNode]] =
   # Find all the parameters and build a table with needed information
+  assert(formalParams[0].len > 1, "RPC procs need to return a future")
+  assert(formalParams[0][0].strVal == "Future", "RPC procs need to return a future")
   for param in formalParams:
     if param.kind == nnkIdentDefs:
       let defaultIdx = param.len - 1
