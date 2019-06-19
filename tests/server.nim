@@ -1,5 +1,5 @@
 import httpbeast, asyncdispatch, json, options
-import personService, greetingService, fileService, current/utils
+import personService, greetingService, fileService, nerve/utils
 
 template routeRpc(service: RpcServer, req: Request): untyped =
   service.routeRpc(if req.body.isSome: req.body.get() else: "")

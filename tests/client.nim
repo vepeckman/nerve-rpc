@@ -1,4 +1,4 @@
-import asyncjs, unittest, current/clientRuntime
+import asyncjs, unittest, nerve/clientRuntime
 import personService, greetingService, fileService
 
 proc main() {.async.} =

@@ -1,6 +1,6 @@
 import unittest
 
-import current
+import nerve
 
 test "sanity":
   rpc:

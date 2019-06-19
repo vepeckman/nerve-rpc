@@ -1,4 +1,4 @@
-import current, current/utils
+import nerve, nerve/utils
 
 type
   Person* = ref object
