@@ -22,6 +22,10 @@ else:
 
   type wstring* = string
 
+  proc fwrap*[T](it: T): Future[T] =
+    result = newFuture[T]()
+    result.complete(it)
+
   macro rpcUri*(rpc: RpcServer): untyped =
     let uriConst = rpc.rpcUriConstName
     result = quote do:
