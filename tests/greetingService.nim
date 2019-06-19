@@ -2,6 +2,6 @@ import current, current/utils
 
 rpc GreetingService, "/api/greeting":
 
-  proc greet(greeting = kstring("Hello"), name = kstring("World")): Future[kstring] =
-    result = newFuture[kstring]()
+  proc greet(greeting = wstring("Hello"), name = wstring("World")): Future[wstring] =
+    result = newFuture[wstring]()
     result.complete(greeting & " " & name)

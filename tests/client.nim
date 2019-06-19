@@ -1,4 +1,4 @@
-import asyncjs, unittest
+import asyncjs, unittest, current/clientRuntime
 import personService, greetingService, fileService
 
 proc main() {.async.} =
@@ -30,7 +30,8 @@ proc main() {.async.} =
       check(parent.children[0].name == "James")
 
     test "Error":
-      discard await FileService.saveFile("missing.txt", "failure")
+      expect RpcError:
+        discard await FileService.saveFile("missing.txt", "failure")
 
   suite "Proc arguments":
 

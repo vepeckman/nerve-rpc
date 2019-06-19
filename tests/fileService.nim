@@ -2,7 +2,7 @@ import current, current/utils
 
 rpc FileService, "/api/file":
 
-  proc saveFile(filename, data: kstring): Future[kstring]  =
+  proc saveFile(filename, data: wstring): Future[wstring]  =
     let file = open(filename)
-    result = newFuture[kstring]()
+    result = newFuture[wstring]()
     result.complete("done")

@@ -1,8 +1,8 @@
 import jsffi
 
 type
-  InvalidResponseError = ref object of CatchableError
-  RpcError = ref object of CatchableError
+  InvalidResponseError* = ref object of CatchableError
+  RpcError* = ref object of CatchableError
 
 proc Boolean(o: JsObject): bool {. importc .}
 

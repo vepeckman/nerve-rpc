@@ -4,7 +4,7 @@ import common
 when defined(js):
   import jsffi, asyncjs
 
-  type kstring* = cstring
+  type wstring* = cstring
 
   proc fetch*(uri: cstring): Future[JsObject] {. importc .}
   proc fetch*(uri: cstring, data: JsObject): Future[JsObject] {. importc .}
@@ -20,7 +20,7 @@ when defined(js):
 else:
   import json, asyncdispatch
 
-  type kstring* = string
+  type wstring* = string
 
   macro rpcUri*(rpc: RpcServer): untyped =
     let uriConst = rpc.rpcUriConstName
