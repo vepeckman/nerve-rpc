@@ -1,5 +1,10 @@
 # Nerve RPC
-Nerve is a RPC framework in Nim designed to build Web facing APIs. It prioritizes flexibility, ease of use, and performance. Nerve provides a compile time macro that generates both an efficient router for dispatching RPC requests on the server, as well as a complete, fully typed, client for Nim's Javascript runtime. 
+Nerve is a RPC framework in Nim designed to build Web facing APIs. It prioritizes flexibility, ease of use, and performance. Nerve provides a compile time macro that generates both an efficient router for dispatching RPC requests on the server, as well as a complete, fully typed, client for Nim's Javascript runtime.
+
+### Install
+Nerve is available on Nim's builtin package manager, [nimble](https://github.com/nim-lang/nimble).
+
+`nimble install nerve`
 
 ### Goals:
 - Reduce the incidental complexity around declaring and calling remote procedures. Declaring remote procedures should be as simple as declaring local procedures, and calling them should be as simple as calling local procedures.
