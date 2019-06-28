@@ -1,6 +1,6 @@
 import nerve, nerve/utils
 
-rpc FileService, "/api/file":
+service FileService, "/api/file":
 
   proc saveFile(filename, data: wstring): Future[wstring]  =
     let file = open(filename)
