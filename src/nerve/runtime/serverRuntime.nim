@@ -1,5 +1,5 @@
 import json, strutils, sequtils, os
-import common
+import ../common
 
 type 
   RequestFormatError* = ref object of CatchableError
@@ -53,3 +53,5 @@ proc newNerveError*(code: int, message: string, e: ref CatchableError): JsonNode
       "stackTrace": if defined(release): "" else: stackTrace
     }
   }
+
+export json

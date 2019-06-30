@@ -26,19 +26,22 @@ else:
     result = newFuture[T]()
     result.complete(it)
 
-  macro rpcUri*(rpc: RpcServer): untyped =
-    let uriConst = rpc.rpcUriConstName
+  macro rpcUri*(rpc: RpcService): untyped =
+    let rpcName = rpc.strVal()
+    let uriConst = rpcName.rpcUriConstName
     result = quote do:
       `uriConst`
 
-  macro routeRpc*(rpc: RpcServer, req: JsonNode): untyped =
-    let routerProc = rpc.rpcRouterProcName
+  macro routeRpc*(rpc: RpcService, req: JsonNode): untyped =
+    let rpcName = rpc.strVal()
+    let routerProc = rpcName.rpcRouterProcName
     result = quote do:
       `routerProc`(`req`)
 
-  macro routeRpc*(rpc: RpcServer, req: string): untyped =
-    let routerProc = rpc.rpcRouterProcName
+  macro routeRpc*(rpc: RpcService, req: string): untyped =
+    let rpcName = rpc.strVal()
+    let routerProc = rpcName.rpcRouterProcName
     result = quote do:
       `routerProc`(`req`)
 
-  export asyncdispatch, RpcServer
+  export asyncdispatch, RpcService

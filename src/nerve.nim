@@ -16,4 +16,3 @@ else:
     result = rpcClient(name, uri.strVal(), body)
 
   export jsffi, clientRuntime
-
