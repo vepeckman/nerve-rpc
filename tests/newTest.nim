@@ -1,4 +1,4 @@
-import nerve/service, nerve/newserver, nerve/utils
+import nerve/service, nerve/newclient, nerve/drivers, nerve/utils
 import macros
 
 service Hello, "/api/hello":
@@ -7,5 +7,5 @@ service Hello, "/api/hello":
 
   proc greet(greeting, name: wstring): Future[wstring] = fwrap(greeting & " " & name)
 
-let helloServer = server(Hello)
-discard helloServer.helloWorld()
+let helloClient = client(Hello, echoDriver)
+discard helloClient.helloWorld()
