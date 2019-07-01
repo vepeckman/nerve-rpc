@@ -1,23 +1,24 @@
-import httpbeast, asyncdispatch, json, options
+import asyncHttpServer, asyncdispatch, json, options
 import personService, greetingService, fileService, nerve/utils
 
-template routeRpc(service: RpcServer, req: Request): untyped =
-  service.routeRpc(if req.body.isSome: req.body.get() else: "")
+let server = newAsyncHttpServer()
 
 proc cb(req: Request) {.async.} =
-  case req.path.get()
+  let body = req.body
+  case req.url.path
   of PersonService.rpcUri:
-    req.send($ await PersonService.routeRpc(req))
+    await req.respond(Http200, $ await PersonService.routeRpc(body))
   of GreetingService.rpcUri:
-    req.send($ await GreetingService.routeRpc(req))
+    await req.respond(Http200, $ await GreetingService.routeRpc(body))
   of FileService.rpcUri:
-    req.send($ await FileService.routeRpc(req))
+    await req.respond(Http200, $ await FileService.routeRpc(body))
   of "/client.js":
-    const headers = "Content-Type: application/javascript"
-    req.send(Http200, readFile("tests/nimcache/client.js"), headers)
+    let headers = newHttpHeaders()
+    headers["Content-Type"] = "application/javascript"
+    await req.respond(Http200, readFile("tests/nimcache/client.js"), headers)
   of "/":
-    req.send("""<html><head><meta charset="UTF-8"></head><body>Testing</body><script src="client.js"></script></html>""")
+    await req.respond(Http200, """<html><head><meta charset="UTF-8"></head><body>Testing</body><script src="client.js"></script></html>""")
   else:
-    req.send(Http404)
+    await req.respond(Http404, "Not Found")
 
-run(cb, Settings(port: Port(1234), bindAddr: ""))
+waitFor server.serve(Port(1234), cb)
