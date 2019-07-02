@@ -7,5 +7,5 @@ service Hello, "/api/hello":
 
   proc greet(greeting, name: wstring): Future[wstring] = fwrap(greeting & " " & name)
 
-let helloClient = client(Hello, echoDriver)
+let helloClient = client(Hello, newHttpDriver("http://a.a" & "/api/hello"))
 discard helloClient.helloWorld()

@@ -47,16 +47,20 @@ proc procBody(p, driver: NimNode): NimNode =
     `req`["method"] = % `nameStr`
     `req`["params"] = `newJsObject`()
     `paramJson`
-    result = `driver`[`retType`](`req`)
+    result = send[`retType`](`driver`, `req`)
 
-macro client*(service: untyped, driver: NerveDriver): untyped =
+macro client*(service: untyped, driver: untyped): untyped =
+  let driverSym = genSym()
   result = newStmtList()
+  result.add(quote do:
+    let `driverSym` = `driver`
+  )
   let name = service.strVal()
   let uri = ""
   let body = getService(name)
   let procs = procDefs(body)
   for p in procs:
-    let newBody = procBody(p, driver)
+    let newBody = procBody(p, driverSym)
     p[p.len - 1] = newBody
     result.add(p)
   result.add(rpcServiceObject(name, procs, uri))
