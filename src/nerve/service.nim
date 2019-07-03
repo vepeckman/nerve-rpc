@@ -1,5 +1,5 @@
 import macros, tables
-import common
+import common, server
 
 proc checkParams(formalParams: NimNode) =
   # Ensure return types are future
@@ -70,11 +70,12 @@ proc createServerProc(p: NimNode, name: string): NimNode =
   result[result.len - 1] = procCall
   result[0] = ident(name)
 
-proc createClientProc(p: NimNode, name, networkProc: string): NimNode =
+proc createClientProc(p: NimNode, name, networkProc: string, driver: NimNode): NimNode =
   let procCall = nnkCall.newTree(networkProcName(networkProc))
   let params = p.findChild(it.kind == nnkFormalParams).getParams()
   for param in params:
     procCall.add(param["name"])
+  procCall.add(driver)
   result = copy(p)
   result[result.len - 1] = procCall
   result[0] = ident(name)
@@ -95,16 +96,17 @@ proc rpcServerFactory(name: string, serviceType: NimNode, procs: seq[NimNode]): 
 
 proc rpcClientFactory(name: string, serviceType: NimNode, procs: seq[NimNode]): NimNode =
   let procName = ident("NerveRpc" & name & "ClientFactory")
+  let driverName = ident("nerveDriver")
   var clientProcs = newStmtList()
   var procTable = initTable[string, NimNode]()
   for p in procs:
     let pName = p[0].basename.strVal()
     let clientProcName ="NerveClient" & pName
     procTable[clientProcName] = p
-    clientProcs.add(createClientProc(p, clientProcName, pName))
+    clientProcs.add(createClientProc(p, clientProcName, pName, driverName))
   let service = rpcServiceObj(name, procTable)
   result = quote do:
-    proc `procName`(): `serviceType` =
+    proc `procName`(`driverName`: string): `serviceType` =
       `clientProcs`
       `service`
 
@@ -141,7 +143,59 @@ proc rpcNetworkProcs(procs: seq[NimNode]): NimNode =
     let networkProc = copy(p)
     networkProc[0] = networkProcName(p[0].basename.strVal())
     networkProc[networkProc.len - 1] = networkProcBody(networkProc)
+    networkProc.findChild(it.kind == nnkFormalParams).add(
+      nnkIdentDefs.newTree(
+        ident("nerveDriver"),
+        ident("string"),
+        newEmptyNode()
+      )
+    )
     result.add(networkProc)
+
+proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
+  let uri = ""
+
+  let 
+    enumSym = genSym(nskType) # Type name the enum used to dispatch procs
+    methodSym = genSym(nskLet) # Variable that holds the requested method
+    serverSym = ident("server")
+    serviceType = rpcServiceName(name)
+    requestSym = ident("request") # The request parameter
+    routerSym = rpcRouterProcName(name)
+    routerName = routerSym.strVal()
+
+  let dispatchStatement = dispatch(procs, methodSym, requestSym)
+  let enumDeclaration = enumDeclaration(enumSym, procs)
+
+  result = newStmtList()
+
+  result.add(quote do:
+    `enumDeclaration`
+    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: JsonNode): Future[JsonNode] {.async.} =
+      result = %* {"jsonrpc": "2.0"}
+      if not nerveValidateRequest(`requestSym`):
+        result["id"] = if `requestSym`.hasKey("id"): `requestSym`["id"] else: newJNull()
+        result["error"] = newNerveError(-32600, "Invalid Request")
+      try:
+        let `methodSym` = nerveGetMethod[`enumSym`](`requestSym`)
+        `dispatchStatement`
+      except DispatchError as e:
+        result["error"] = newNerveError(-32601, "Method not found", e)
+      except ParameterError as e:
+        result["error"] = newNerveError(-32602, "Invalid params", e)
+      except CatchableError as e:
+        result["error"] = newNerveError(-32000, "Server error", e)
+
+    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: string): Future[JsonNode] =
+      try:
+        let requestJson = parseJson(`requestSym`)
+        result = `routerSym`(`serverSym`, requestJson)
+      except CatchableError as e:
+        result = newFuture[JsonNode](`routerName`)
+        var response = %* {"jsonrpc": "2.0", "id": newJNull()}
+        response["error"] = newNerveError(-32700, "Parse error", e)
+        result.complete(response)
+  )
 
 macro service*(name: untyped, uri: static[string], body: untyped): untyped =
   let procs = procDefs(body)
@@ -152,9 +206,10 @@ macro service*(name: untyped, uri: static[string], body: untyped): untyped =
   result.add(rpcNetworkProcs(procs))
   result.add(rpcServiceType(nameStr, procs))
   result.add(rpcUriConst(nameStr, uri))
+  result.add(serverDispatch(nameStr, procs))
   result.add(rpcServerFactory(nameStr, serviceType, procs))
   result.add(rpcClientFactory(nameStr, serviceType, procs))
   echo repr result
 
-import json
-export json
+import json, serverRuntime
+export json, serverRuntime

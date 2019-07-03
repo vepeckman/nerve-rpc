@@ -139,8 +139,6 @@ macro server*(service: untyped): untyped =
         result.complete(response)
   )
 
-  result.add(rpcServiceObject(name, procs, uri))
-
   echo repr result
 
 export serverRuntime

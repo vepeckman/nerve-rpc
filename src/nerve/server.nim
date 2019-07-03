@@ -7,9 +7,9 @@ proc procDefs(node: NimNode): seq[NimNode] =
     if child.kind == nnkProcDef:
       result.add(child)
 
-proc dispatchName(node: NimNode): NimNode = ident(dispatchPrefix & node.name.strVal.capitalizeAscii)
+proc dispatchName*(node: NimNode): NimNode = ident(dispatchPrefix & node.name.strVal.capitalizeAscii)
 
-proc enumDeclaration(enumName: NimNode, procs: seq[NimNode]): NimNode =
+proc enumDeclaration*(enumName: NimNode, procs: seq[NimNode]): NimNode =
   # The enum used to dispatch methods
   var enumTy = nnkEnumTy.newTree(newEmptyNode())
   for p in procs:
@@ -48,7 +48,7 @@ proc getParams(formalParams: NimNode): seq[Table[string, NimNode]] =
           }.toTable
         )
 
-proc unboxExpression(param: Table[string, NimNode], requestSym: NimNode): NimNode =
+proc unboxExpression*(param: Table[string, NimNode], requestSym: NimNode): NimNode =
   # Retrieve the param from the request, convert to Nim type
   var nameStr = param["nameStr"]
   var ntype = param["type"]
@@ -61,7 +61,7 @@ proc unboxExpression(param: Table[string, NimNode], requestSym: NimNode): NimNod
     result = quote do:
       nerveUnboxParameter[`ntype`](`requestSym`, `nameStr`)
 
-proc procWrapper(requestSym, p: NimNode): NimNode =
+proc procWrapper*(requestSym, p: NimNode): NimNode =
   # This wrapper gets the parameters from the request and uses them to invoke the proc
   result = nnkStmtList.newTree()
   var methodCall = nnkCall.newTree(p.name)
@@ -80,7 +80,7 @@ proc procWrapper(requestSym, p: NimNode): NimNode =
       result["result"] = % await `methodCall`
   )
 
-proc dispatch(procs: seq[NimNode], methodSym, requestSym: NimNode): NimNode =
+proc dispatch*(procs: seq[NimNode], methodSym, requestSym: NimNode): NimNode =
   # Create the case statement used to dispatch proc
   result = nnkCaseStmt.newTree(methodSym)
 
@@ -93,50 +93,3 @@ proc dispatch(procs: seq[NimNode], methodSym, requestSym: NimNode): NimNode =
         wrapper
     ))
 
-proc rpcServer*(name: NimNode, uri: string, body: NimNode): NimNode =
-  let 
-    enumSym = genSym(nskType) # Type name the enum used to dispatch procs
-    methodSym = genSym(nskLet) # Variable that holds the requested method
-    requestSym = ident("request") # The request parameter
-    routerSym = rpcRouterProcName(name)
-    routerName = routerSym.strVal()
-  let procs = procDefs(body)
-
-  let dispatchStatement = dispatch(procs, methodSym, requestSym)
-  let enumDeclaration = enumDeclaration(enumSym, procs)
-
-  body.add(rpcServiceType(name, procs))
-  body.add(rpcServiceObject(name, procs, uri))
-  body.add(rpcUriConst(name, uri))
-
-  body.add(quote do:
-    `enumDeclaration`
-    proc `routerSym`*(`requestSym`: JsonNode): Future[JsonNode] {.async.} =
-      result = %* {"jsonrpc": "2.0"}
-      if not nerveValidateRequest(`requestSym`):
-        result["id"] = if `requestSym`.hasKey("id"): `requestSym`["id"] else: newJNull()
-        result["error"] = newNerveError(-32600, "Invalid Request")
-      try:
-        let `methodSym` = nerveGetMethod[`enumSym`](`requestSym`)
-        `dispatchStatement`
-      except DispatchError as e:
-        result["error"] = newNerveError(-32601, "Method not found", e)
-      except ParameterError as e:
-        result["error"] = newNerveError(-32602, "Invalid params", e)
-      except CatchableError as e:
-        result["error"] = newNerveError(-32000, "Server error", e)
-
-    proc `routerSym`*(`requestSym`: string): Future[JsonNode] =
-      try:
-        let requestJson = parseJson(`requestSym`)
-        result = `routerSym`(requestJson)
-      except CatchableError as e:
-        result = newFuture[JsonNode](`routerName`)
-        var response = %* {"jsonrpc": "2.0", "id": newJNull()}
-        response["error"] = newNerveError(-32700, "Parse error", e)
-        result.complete(response)
-  )
-  result = body
-
-  if defined(nerveRpcDebug):
-    echo repr result
