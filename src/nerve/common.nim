@@ -1,10 +1,8 @@
-import macros
-import json
+import macros, tables
 
 const dispatchPrefix* = "NerveRpc"
 
-type RpcService* = object of RootObj
-  uri*: string
+proc networkProcName*(name: string): NimNode = ident("NerveNetwork" & name)
 
 proc rpcRouterProcName*(name: string): NimNode = ident("NerveRpc" & name & "Router")
 
@@ -32,10 +30,41 @@ proc rpcServiceType*(name: string, procs: seq[NimNode]): NimNode =
     type `typeName`* = object of RpcService
   result[0][2][2] = procFields
 
-proc rpcServiceObject*(name: string, procs: seq[NimNode], uri = "rpc"): NimNode =
+proc rpcServiceObject*(name: string, procs: Table[string, NimNode], uri = "rpc"): NimNode =
   let typeName = rpcServiceName(name)
   result = quote do:
     `typeName`(uri: `uri`)
-  for p in procs:
-    var field = newColonExpr(p[0].basename, p[0].basename)
+  for pName in procs.keys:
+    var field = newColonExpr(procs[pName][0].basename, ident(pName))
     result.add(field)
+
+proc paramType(param: NimNode): NimNode =
+  # Either returns the type node of the param
+  # or creates a node that gets the type of default value
+  let defaultIdx = param.len - 1
+  let typeIdx = param.len - 2
+  if param[typeIdx].kind == nnkEmpty:
+    var defaultParam = param[defaultIdx]
+    result = quote do:
+      typeof(`defaultParam`)
+  else:
+    result = param[typeIdx]
+
+proc getParams*(formalParams: NimNode): seq[Table[string, NimNode]] =
+  # Find all the parameters and build a table with needed information
+  assert(formalParams[0].len > 1, "RPC procs need to return a future")
+  assert(formalParams[0][0].strVal == "Future", "RPC procs need to return a future")
+  for param in formalParams:
+    if param.kind == nnkIdentDefs:
+      let defaultIdx = param.len - 1
+      let typeIdx = param.len - 2
+      let ptype = paramType(param)
+      for i in 0 ..< typeIdx:
+        result.add(
+          {
+            "name": param[i],
+            "nameStr": newStrLitNode(param[i].strVal),
+            "type": ptype,
+            "defaultVal": param[defaultIdx]
+          }.toTable
+        )

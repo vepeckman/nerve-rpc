@@ -1,5 +1,5 @@
 import macros
-import common
+import common, types
 
 when defined(js):
   import jsffi, asyncjs
@@ -44,4 +44,4 @@ else:
     result = quote do:
       `routerProc`(`req`)
 
-  export asyncdispatch, RpcService
+  export asyncdispatch

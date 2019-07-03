@@ -53,3 +53,5 @@ proc newNerveError*(code: int, message: string, e: ref CatchableError): JsonNode
       "stackTrace": if defined(release): "" else: stackTrace
     }
   }
+
+export json
