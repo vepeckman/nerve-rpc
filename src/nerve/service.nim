@@ -21,7 +21,12 @@ proc procDefs(node: NimNode): seq[NimNode] =
 proc serviceImports(): NimNode =
   result = quote do:
     import nerve/utils
-    import nerve/serverRuntime
+    import nerve/web
+    when not defined(js):
+      import asyncdispatch
+      import nerve/serverRuntime
+    else:
+      import asyncjs
     import nerve/clientRuntime
 
 proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
@@ -34,7 +39,8 @@ proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   result.add(networkProcs(procs))
   result.add(rpcServiceType(nameStr, procs))
   result.add(rpcUriConst(nameStr, uri))
-  result.add(serverDispatch(nameStr, procs))
-  result.add(rpcServerFactory(nameStr, serviceType, procs))
+  if not defined(js):
+    result.add(serverDispatch(nameStr, procs))
+    result.add(rpcServerFactory(nameStr, serviceType, procs))
   result.add(rpcClientFactory(nameStr, serviceType, procs))
   echo repr result

@@ -3,7 +3,6 @@ import macros
 when defined(js):
   import jsffi, asyncjs
 
-  type wstring* = cstring
   type WObject* = JsObject
 
   proc fetch*(uri: cstring): Future[JsObject] {. importc .}
@@ -15,7 +14,6 @@ when defined(js):
   proc catch*[T, R](promise: Future[T], next: proc (data: T): R): Future[R] {. importcpp: "#.catch(@)" .}
   proc catch*[T](promise: Future[T], next: proc(data: T)): Future[void] {. importcpp: "#.catch(@)" .}
 
-  let hasKey = hasOwnProperty
   type Promise = distinct JsObject
   var PromiseObj {. importc: "Promise", nodecl .}: Promise
   proc resolve[T](promise: Promise, it: T): Future[T] {.importcpp: "#.resolve(@)".}
@@ -27,7 +25,6 @@ when defined(js):
 else:
   import json, asyncdispatch
 
-  type wstring* = string
   type WObject* = JsonNode
 
   proc then*[T, R](future: Future[T], cb: proc (t: T): R {.gcsafe.}): Future[R] =

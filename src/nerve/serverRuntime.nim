@@ -43,6 +43,10 @@ proc nerveUnboxParameter*[T](req: WObject, param: string): T =
     raise ParameterError(msg: msg, parent: getCurrentException())
 
 when not defined(js):
+
+  proc newNerveResponse*(): WObject =
+    %* {"jsonrpc": "2.0", "id": newJNull()}
+
   proc newNerveError*(code: int, message: string): WObject =
     %* {
       "code": code,
@@ -66,6 +70,12 @@ when not defined(js):
     }
 
 else:
+
+  proc newNerveResponse*(): JsObject =
+    result = newJsObject()
+    result["jsonrpc"] = cstring"2.0"
+    result["id"] = jsNull
+
   proc newNerveError*(code: int, message: string): WObject =
     result = newJsObject()
     result["code"] = code

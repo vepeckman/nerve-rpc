@@ -1,5 +1,5 @@
 import macros, tables, strutils
-import common
+import common, utils
 
 proc dispatchName(node: NimNode): NimNode = ident(dispatchPrefix & node.name.strVal.capitalizeAscii)
 
@@ -75,8 +75,8 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
 
   result.add(quote do:
     `enumDeclaration`
-    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: JsonNode): Future[JsonNode] {.async.} =
-      result = %* {"jsonrpc": "2.0"}
+    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: WObject): Future[WObject] {.async.} =
+      result = newNerveResponse()
       if not nerveValidateRequest(`requestSym`):
         result["id"] = if `requestSym`.hasKey("id"): `requestSym`["id"] else: newJNull()
         result["error"] = newNerveError(-32600, "Invalid Request")
@@ -90,13 +90,13 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
       except CatchableError as e:
         result["error"] = newNerveError(-32000, "Server error", e)
 
-    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: string): Future[JsonNode] =
+    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: string): Future[WObject] =
       try:
         let requestJson = parseJson(`requestSym`)
         result = `routerSym`(`serverSym`, requestJson)
       except CatchableError as e:
-        result = newFuture[JsonNode](`routerName`)
-        var response = %* {"jsonrpc": "2.0", "id": newJNull()}
+        result = newFuture[WObject](`routerName`)
+        var response = newNerveResponse()
         response["error"] = newNerveError(-32700, "Parse error", e)
         result.complete(response)
   )
