@@ -1,7 +1,6 @@
 import macros, tables
 import common
 
-
 proc networkProcBody(p: NimNode): NimNode =
   let nameStr = newStrLitNode(p.name.strVal)
   let formalParams = p.findChild(it.kind == nnkFormalParams)
@@ -10,6 +9,7 @@ proc networkProcBody(p: NimNode): NimNode =
   let req = genSym()
   let driver = ident("nerveDriver")
   let newJsObject = if defined(js): ident("newJsObject") else: ident("newJObject")
+  let toJs = if defined(js): ident("toJs") else: ident("%")
 
   var paramJson = nnkStmtList.newTree()
   for param in params:
@@ -17,14 +17,14 @@ proc networkProcBody(p: NimNode): NimNode =
     let name = param["name"]
     paramJson.add(
       quote do:
-        `req`["params"][`nameStr`] = % `name`
+        `req`["params"][`nameStr`] = `toJs` `name`
     )
   
   result = quote do:
     let `req` = `newJsObject`()
-    `req`["jsonrpc"] = % "2.0"
-    `req`["id"] = % 0
-    `req`["method"] = % `nameStr`
+    `req`["jsonrpc"] = `toJs` "2.0"
+    `req`["id"] = `toJs` 0
+    `req`["method"] = `toJs` `nameStr`
     `req`["params"] = `newJsObject`()
     `paramJson`
     result = `driver`(`req`)

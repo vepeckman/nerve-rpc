@@ -16,6 +16,11 @@ when defined(js):
   proc catch*[T](promise: Future[T], next: proc(data: T)): Future[void] {. importcpp: "#.catch(@)" .}
 
   let hasKey = hasOwnProperty
+  type Promise = distinct JsObject
+  var PromiseObj {. importc: "Promise", nodecl .}: Promise
+  proc resolve[T](promise: Promise, it: T): Future[T] {.importcpp: "#.resolve(@)".}
+  proc fwrap*[T](it: T): Future[T] =
+    PromiseObj.resolve(it)
 
   export jsffi
 

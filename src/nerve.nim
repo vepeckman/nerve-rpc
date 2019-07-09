@@ -1,5 +1,5 @@
 import macros
-import nerve/service, nerve/types, nerve/common
+import nerve/service, nerve/types, nerve/common, nerve/utils
 when defined(js):
   import jsffi
 else:
@@ -14,7 +14,7 @@ macro rpcUri*(rpc: RpcService): untyped =
   result = quote do:
     `uriConst`
 
-macro routeRpc*(rpc: RpcService, req: JsonNode): untyped =
+macro routeRpc*(rpc: RpcService, req: WObject): untyped =
   let rpcName = rpc.strVal()
   let routerProc = rpcName.rpcRouterProcName
   result = quote do:
