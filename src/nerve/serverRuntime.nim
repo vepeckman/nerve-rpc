@@ -1,4 +1,4 @@
-import json, strutils, sequtils, os
+import json, asyncdispatch, strutils, sequtils, os
 import common
 
 type 
@@ -54,4 +54,4 @@ proc newNerveError*(code: int, message: string, e: ref CatchableError): JsonNode
     }
   }
 
-export json
+export json, asyncdispatch

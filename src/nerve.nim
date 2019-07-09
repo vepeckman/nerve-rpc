@@ -1,18 +1,29 @@
 import macros
-
-when not defined(js):
-  import json
-  import nerve/server, nerve/serverRuntime
-
-  macro service*(name, uri, body: untyped): untyped =
-    result = rpcServer(name, uri.strVal(), body)
-
-  export json, serverRuntime
-else:
+import nerve/service, nerve/types, nerve/common
+when defined(js):
   import jsffi
-  import nerve/client, nerve/clientRuntime
+else:
+  import json
 
-  macro service*(name, uri, body: untyped): untyped =
-    result = rpcClient(name, uri.strVal(), body)
+macro service*(name: untyped, uri: static[string], body: untyped): untyped =
+  result = rpcService(name, uri, body)
 
-  export jsffi, clientRuntime
+macro rpcUri*(rpc: RpcService): untyped =
+  let rpcName = rpc.strVal()
+  let uriConst = rpcName.rpcUriConstName
+  result = quote do:
+    `uriConst`
+
+macro routeRpc*(rpc: RpcService, req: JsonNode): untyped =
+  let rpcName = rpc.strVal()
+  let routerProc = rpcName.rpcRouterProcName
+  result = quote do:
+    `routerProc`(`req`)
+
+macro routeRpc*(rpc: RpcService, req: string): untyped =
+  let rpcName = rpc.strVal()
+  let routerProc = rpcName.rpcRouterProcName
+  result = quote do:
+    `routerProc`(`req`)
+
+export types

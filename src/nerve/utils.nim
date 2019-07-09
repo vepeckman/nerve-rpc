@@ -15,33 +15,12 @@ when defined(js):
   proc catch*[T, R](promise: Future[T], next: proc (data: T): R): Future[R] {. importcpp: "#.catch(@)" .}
   proc catch*[T](promise: Future[T], next: proc(data: T)): Future[void] {. importcpp: "#.catch(@)" .}
 
-  export asyncjs
 
 else:
-  import json, asyncdispatch
+  import asyncdispatch
 
   type wstring* = string
 
   proc fwrap*[T](it: T): Future[T] =
     result = newFuture[T]()
     result.complete(it)
-
-  macro rpcUri*(rpc: RpcService): untyped =
-    let rpcName = rpc.strVal()
-    let uriConst = rpcName.rpcUriConstName
-    result = quote do:
-      `uriConst`
-
-  macro routeRpc*(rpc: RpcService, req: JsonNode): untyped =
-    let rpcName = rpc.strVal()
-    let routerProc = rpcName.rpcRouterProcName
-    result = quote do:
-      `routerProc`(`req`)
-
-  macro routeRpc*(rpc: RpcService, req: string): untyped =
-    let rpcName = rpc.strVal()
-    let routerProc = rpcName.rpcRouterProcName
-    result = quote do:
-      `routerProc`(`req`)
-
-  export asyncdispatch

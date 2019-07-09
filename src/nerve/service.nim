@@ -22,7 +22,7 @@ proc serviceImports(): NimNode =
   result = quote do:
     import nerve/serverRuntime
 
-macro service*(name: untyped, uri: static[string], body: untyped): untyped =
+proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   let procs = procDefs(body)
   let nameStr = name.strVal()
   let serviceType = rpcServiceName(nameStr)
@@ -36,5 +36,3 @@ macro service*(name: untyped, uri: static[string], body: untyped): untyped =
   result.add(rpcServerFactory(nameStr, serviceType, procs))
   result.add(rpcClientFactory(nameStr, serviceType, procs))
   echo repr result
-
-export types
