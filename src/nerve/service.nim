@@ -20,7 +20,9 @@ proc procDefs(node: NimNode): seq[NimNode] =
       result.add(child)
 proc serviceImports(): NimNode =
   result = quote do:
+    import nerve/utils
     import nerve/serverRuntime
+    import nerve/clientRuntime
 
 proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   let procs = procDefs(body)

@@ -8,6 +8,7 @@ proc networkProcBody(p: NimNode): NimNode =
   let retType = formalParams[0][1]
   let params = formalParams.getParams()
   let req = genSym()
+  let driver = ident("nerveDriver")
   let newJsObject = if defined(js): ident("newJsObject") else: ident("newJObject")
 
   var paramJson = nnkStmtList.newTree()
@@ -26,8 +27,8 @@ proc networkProcBody(p: NimNode): NimNode =
     `req`["method"] = % `nameStr`
     `req`["params"] = `newJsObject`()
     `paramJson`
-    result = newFuture[`retType`]()
-    result.complete(`req`.to(`retType`))
+    result = `driver`(`req`)
+      .then(handleRpcResponse[`retType`])
 
 proc networkProcs*(procs: seq[NimNode]): NimNode =
   result = newStmtList()
