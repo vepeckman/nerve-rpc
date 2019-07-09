@@ -38,7 +38,7 @@ proc networkProcs*(procs: seq[NimNode]): NimNode =
     networkProc.findChild(it.kind == nnkFormalParams).add(
       nnkIdentDefs.newTree(
         ident("nerveDriver"),
-        ident("string"),
+        ident("NerveDriver"),
         newEmptyNode()
       )
     )

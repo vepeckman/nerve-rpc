@@ -1,4 +1,4 @@
-import nerve, nerve/utils
+import nerve, nerve/utils, nerve/drivers
 
 service Hello, "/api/hello":
 
