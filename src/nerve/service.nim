@@ -18,16 +18,23 @@ proc procDefs(node: NimNode): seq[NimNode] =
     if child.kind == nnkProcDef:
       child.findChild(it.kind == nnkFormalParams).checkParams()
       result.add(child)
+
 proc serviceImports(): NimNode =
   result = quote do:
     import nerve/utils
     import nerve/web
+    import nerve/types
     when not defined(js):
       import asyncdispatch
       import nerve/serverRuntime
     else:
       import asyncjs
     import nerve/clientRuntime
+
+proc compiletimeReference(name: NimNode): NimNode =
+  let nameStr = name.strVal().newStrLitNode()
+  result = quote do:
+    const `name`* = RpcServiceName(`nameStr`)
 
 proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   let procs = procDefs(body)
@@ -43,4 +50,5 @@ proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
     result.add(serverDispatch(nameStr, procs))
     result.add(rpcServerFactory(nameStr, serviceType, procs))
   result.add(rpcClientFactory(nameStr, serviceType, procs))
+  result.add(compiletimeReference(name))
   echo repr result

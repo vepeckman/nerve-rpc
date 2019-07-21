@@ -15,6 +15,10 @@ proc rpcUriConst*(name, uri: string): NimNode =
 
 proc rpcServiceName*(name: string): NimNode = ident("NerveRpc" & name & "Object")
 
+proc rpcServerFactoryProc*(name: string): NimNode = ident("NerveRpc" & name & "ServerFactory")
+
+proc rpcClientFactoryProc*(name: string): NimNode = ident("NerveRpc" & name & "ClientFactory")
+
 proc rpcServiceType*(name: string, procs: seq[NimNode]): NimNode =
   let typeName = rpcServiceName(name)
   var procFields = nnkRecList.newTree()

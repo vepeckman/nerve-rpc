@@ -22,7 +22,7 @@ proc createClientProc(p: NimNode, name, networkProc: string, driver: NimNode): N
   result[0] = ident(name)
 
 proc rpcServerFactory*(name: string, serviceType: NimNode, procs: seq[NimNode]): NimNode =
-  let procName = ident("NerveRpc" & name & "ServerFactory")
+  let procName = rpcServerFactoryProc(name)
   var serverProcs = newStmtList()
   var procTable = initTable[string, NimNode]()
   for p in procs:
@@ -36,7 +36,7 @@ proc rpcServerFactory*(name: string, serviceType: NimNode, procs: seq[NimNode]):
       `service`
 
 proc rpcClientFactory*(name: string, serviceType: NimNode, procs: seq[NimNode]): NimNode =
-  let procName = ident("NerveRpc" & name & "ClientFactory")
+  let procName = rpcClientFactoryProc(name)
   let driverName = ident("nerveDriver")
   var clientProcs = newStmtList()
   var procTable = initTable[string, NimNode]()
