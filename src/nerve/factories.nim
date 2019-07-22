@@ -31,7 +31,7 @@ proc rpcServerFactory*(name: string, serviceType: NimNode, procs: seq[NimNode]):
     serverProcs.add(createServerProc(p, serverProcName))
   let service = rpcServiceObject(name, procTable)
   result = quote do:
-    proc `procName`(): `serviceType` =
+    proc `procName`*(): `serviceType` =
       `serverProcs`
       `service`
 
@@ -47,6 +47,6 @@ proc rpcClientFactory*(name: string, serviceType: NimNode, procs: seq[NimNode]):
     clientProcs.add(createClientProc(p, clientProcName, pName, driverName))
   let service = rpcServiceObject(name, procTable)
   result = quote do:
-    proc `procName`(`driverName`: NerveDriver): `serviceType` =
+    proc `procName`*(`driverName`: NerveDriver): `serviceType` =
       `clientProcs`
       `service`

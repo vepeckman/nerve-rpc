@@ -7,4 +7,3 @@ service Hello, "/api/hello":
   proc greet(greeting, name: wstring): Future[wstring] = fwrap(greeting & " " & name)
 
 let server = Hello.newClient(newHttpDriver(""))
-discard Hello.routeRpc(server, "")

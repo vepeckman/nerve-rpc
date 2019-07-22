@@ -42,7 +42,8 @@ proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   let serviceType = rpcServiceName(nameStr)
   result = newStmtList()
   result.add(serviceImports())
-  result.add(procs.toStmtList())
+  if not defined(js):
+    result.add(procs.toStmtList())
   result.add(networkProcs(procs))
   result.add(rpcServiceType(nameStr, procs))
   result.add(rpcUriConst(nameStr, uri))
