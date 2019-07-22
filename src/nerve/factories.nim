@@ -1,5 +1,5 @@
 import macros, tables
-import common
+import common, types
 
 proc createServerProc(p: NimNode, name: string): NimNode =
   let providedProcName = p[0].basename
@@ -29,7 +29,7 @@ proc rpcServerFactory*(name: string, serviceType: NimNode, procs: seq[NimNode]):
     let serverProcName ="NerveServer" & p[0].basename.strVal()
     procTable[serverProcName] = p
     serverProcs.add(createServerProc(p, serverProcName))
-  let service = rpcServiceObject(name, procTable)
+  let service = rpcServiceObject(name, procTable, rskServer)
   result = quote do:
     proc `procName`*(): `serviceType` =
       `serverProcs`
@@ -45,7 +45,7 @@ proc rpcClientFactory*(name: string, serviceType: NimNode, procs: seq[NimNode]):
     let clientProcName ="NerveClient" & pName
     procTable[clientProcName] = p
     clientProcs.add(createClientProc(p, clientProcName, pName, driverName))
-  let service = rpcServiceObject(name, procTable)
+  let service = rpcServiceObject(name, procTable, rskClient)
   result = quote do:
     proc `procName`*(`driverName`: NerveDriver): `serviceType` =
       `clientProcs`

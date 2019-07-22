@@ -34,7 +34,7 @@ proc serviceImports(): NimNode =
 proc compiletimeReference(name: NimNode): NimNode =
   let nameStr = name.strVal().newStrLitNode()
   result = quote do:
-    const `name`* = RpcServiceName(`nameStr`)
+    const `name`* = RpcService(`nameStr`)
 
 proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   let procs = procDefs(body)

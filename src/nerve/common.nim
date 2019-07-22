@@ -1,4 +1,5 @@
 import macros, tables
+import types
 
 const dispatchPrefix* = "NerveRpc"
 
@@ -31,13 +32,14 @@ proc rpcServiceType*(name: string, procs: seq[NimNode]): NimNode =
     )
 
   result = quote do:
-    type `typeName`* = object of RpcService
+    type `typeName`* = object of RpcServiceInst
   result[0][2][2] = procFields
 
-proc rpcServiceObject*(name: string, procs: Table[string, NimNode], uri = "rpc"): NimNode =
+proc rpcServiceObject*(name: string, procs: Table[string, NimNode], kind: RpcServiceKind): NimNode =
   let typeName = rpcServiceName(name)
+  let kindName = ident($kind)
   result = quote do:
-    `typeName`(uri: `uri`)
+    `typeName`(kind: `kindName`)
   for pName in procs.keys:
     var field = newColonExpr(procs[pName][0].basename, ident(pName))
     result.add(field)

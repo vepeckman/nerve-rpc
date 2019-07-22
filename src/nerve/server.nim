@@ -76,6 +76,7 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
   result.add(quote do:
     `enumDeclaration`
     proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: WObject): Future[WObject] {.async.} =
+      assert(`serverSym`.kind == rskServer, "Only Nerve Servers can do routing")
       result = newNerveResponse()
       if not nerveValidateRequest(`requestSym`):
         result["id"] = if `requestSym`.hasKey("id"): `requestSym`["id"] else: newJNull()
@@ -91,6 +92,7 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
         result["error"] = newNerveError(-32000, "Server error", e)
 
     proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: string): Future[WObject] =
+      assert(`serverSym`.kind == rskServer, "Only Nerve Servers can do routing")
       try:
         let requestJson = parseJson(`requestSym`)
         result = `routerSym`(`serverSym`, requestJson)

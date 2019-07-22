@@ -4,10 +4,12 @@ when not defined(js):
 else:
   import asyncjs
 
-type RpcService* = object of RootObj
-  uri*: string
+type RpcServiceKind* = enum rskClient, rskServer
 
-type RpcServiceName* = distinct string
-proc `$`*(s: RpcServiceName): string {.borrow.}
+type RpcServiceInst* = object of RootObj
+  kind*: RpcServiceKind
+
+type RpcService* = distinct string
+proc `$`*(s: RpcService): string {.borrow.}
 
 type NerveDriver* = proc (req: WObject): Future[WObject]
