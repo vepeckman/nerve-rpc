@@ -1,5 +1,5 @@
 import macros
-import nerve/service, nerve/types, nerve/common, nerve/utils
+import nerve/service, nerve/types, nerve/common, nerve/utils, nerve/drivers
 when defined(js):
   import jsffi
 else:
@@ -21,6 +21,12 @@ macro newClient*(rpc: static[RpcService], driver: NerveDriver): untyped =
   let clientFactoryProc = rpcClientFactoryProc($rpc)
   result = quote do:
     `clientFactoryProc`(`driver`)
+
+macro newHttpClient*(rpc: static[RpcService], host: static[string] = ""): untyped =
+  let clientFactoryProc = rpcClientFactoryProc($rpc)
+  let serviceName = ident($rpc)
+  result = quote do:
+    `clientFactoryProc`(newHttpDriver(`host` & `serviceName`.rpcUri))
 
 macro rpcUri*(rpc: static[RpcService]): untyped =
   let rpcName = $rpc
@@ -45,4 +51,4 @@ macro routeRpc*(rpc: static[RpcService], server: RpcServiceInst, req: string): u
   result = quote do:
     `routerProc`(`server`, `req`)
 
-export types
+export types, drivers

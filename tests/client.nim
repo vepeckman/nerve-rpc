@@ -1,10 +1,17 @@
-import asyncjs, unittest, nerve, nerve/drivers, nerve/clientRuntime
+when defined(js):
+  import asyncjs
+  const host = ""
+else:
+  import asyncdispatch
+  const host = "http://127.0.0.1:1234"
+
+import unittest, nerve, nerve/clientRuntime
 import personService, greetingService, fileService
 
 proc main() {.async.} =
-  let personClient = PersonService.newClient(newHttpDriver(PersonService.rpcUri))
-  let greetingClient = GreetingService.newClient(newHttpDriver(GreetingService.rpcUri))
-  let fileClient = FileService.newClient(newHttpDriver(FileService.rpcUri))
+  let personClient = PersonService.newHttpClient(host)
+  let greetingClient = GreetingService.newHttpClient(host)
+  let fileClient = FileService.newHttpClient(host)
 
   suite "Sanity":
 
@@ -33,9 +40,10 @@ proc main() {.async.} =
       check(parent.self.name == "Alex")
       check(parent.children[0].name == "James")
 
-    test "Error":
-      expect RpcError:
-        discard await fileClient.saveFile("missing.txt", "failure")
+    when defined(js):
+      test "Error":
+        expect RpcError:
+          discard await fileClient.saveFile("missing.txt", "failure")
 
   suite "Proc arguments":
 
@@ -54,4 +62,7 @@ proc main() {.async.} =
       check(msg == "Hello world")
 
 
-discard main()
+when defined(js):
+  discard main()
+else:
+  waitFor main()
