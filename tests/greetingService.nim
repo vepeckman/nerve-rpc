@@ -1,4 +1,4 @@
-import nerve, nerve/utils
+import nerve, nerve/web
 
 service GreetingService, "/api/greeting":
 

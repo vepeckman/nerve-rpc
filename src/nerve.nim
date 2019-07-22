@@ -28,6 +28,11 @@ macro rpcUri*(rpc: static[RpcService]): untyped =
   result = quote do:
     `uriConst`
 
+macro rpcType*(rpc: static[RpcService]): untyped =
+  let typeName = rpcServiceName($rpc)
+  result = quote do:
+    `typeName`
+
 macro routeRpc*(rpc: static[RpcService], server: RpcServiceInst, req: WObject): untyped =
   let rpcName = $rpc
   let routerProc = rpcName.rpcRouterProcName
