@@ -48,4 +48,5 @@ proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
     result.add(rpcServerFactory(nameStr, serviceType, procs))
   result.add(rpcClientFactory(nameStr, serviceType, procs))
   result.add(compiletimeReference(name))
-  echo repr result
+  if defined(nerveRpcDebug):
+    echo repr result

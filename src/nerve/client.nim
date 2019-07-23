@@ -2,7 +2,6 @@ import macros, tables
 import common
 
 proc networkProcBody(p: NimNode, methodName: string): NimNode =
-  let nameStr = newStrLitNode(p.name.strVal)
   let formalParams = p.findChild(it.kind == nnkFormalParams)
   let retType = formalParams[0][1]
   let params = formalParams.getParams()

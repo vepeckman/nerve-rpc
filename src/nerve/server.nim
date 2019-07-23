@@ -57,8 +57,6 @@ proc dispatch(procs: seq[NimNode], methodSym, requestSym: NimNode): NimNode =
     ))
 
 proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
-  let uri = ""
-
   let 
     enumSym = genSym(nskType) # Type name the enum used to dispatch procs
     methodSym = genSym(nskLet) # Variable that holds the requested method
