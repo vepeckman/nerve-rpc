@@ -1,9 +1,5 @@
 import macros
-import nerve/service, nerve/types, nerve/common, nerve/utils, nerve/drivers
-when defined(js):
-  import jsffi
-else:
-  import json
+import nerve/service, nerve/types, nerve/common, nerve/web, nerve/drivers
 
 macro service*(name: untyped, uri: untyped = nil, body: untyped = nil): untyped =
   if body.kind != nnkNilLit:
@@ -39,7 +35,7 @@ macro rpcType*(rpc: static[RpcService]): untyped =
   result = quote do:
     `typeName`
 
-macro routeRpc*(rpc: static[RpcService], server: RpcServiceInst, req: WObject): untyped =
+macro routeRpc*(rpc: static[RpcService], server: RpcServiceInst, req: JsObject): untyped =
   let rpcName = $rpc
   let routerProc = rpcName.rpcRouterProcName
   result = quote do:

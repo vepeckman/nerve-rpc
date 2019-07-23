@@ -1,5 +1,5 @@
 import macros, tables, strutils
-import common, utils
+import common
 
 proc dispatchName(node: NimNode): NimNode = ident(dispatchPrefix & node.name.strVal.capitalizeAscii)
 
@@ -75,7 +75,7 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
 
   result.add(quote do:
     `enumDeclaration`
-    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: WObject): Future[WObject] {.async.} =
+    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: JsObject): Future[JsObject] {.async.} =
       assert(`serverSym`.kind == rskServer, "Only Nerve Servers can do routing")
       result = newNerveResponse()
       if not nerveValidateRequest(`requestSym`):
@@ -91,13 +91,13 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
       except CatchableError as e:
         result["error"] = newNerveError(-32000, "Server error", e)
 
-    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: string): Future[WObject] =
+    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: string): Future[JsObject] =
       assert(`serverSym`.kind == rskServer, "Only Nerve Servers can do routing")
       try:
         let requestJson = parseJson(`requestSym`)
         result = `routerSym`(`serverSym`, requestJson)
       except CatchableError as e:
-        result = newFuture[WObject](`routerName`)
+        result = newFuture[JsObject](`routerName`)
         var response = newNerveResponse()
         response["error"] = newNerveError(-32700, "Parse error", e)
         result.complete(response)

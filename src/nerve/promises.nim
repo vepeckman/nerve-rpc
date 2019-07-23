@@ -1,9 +1,8 @@
 import macros
+import web
 
 when defined(js):
-  import jsffi, asyncjs
-
-  type WObject* = JsObject
+  import asyncjs
 
   proc fetch*(uri: cstring): Future[JsObject] {. importc .}
   proc fetch*(uri: cstring, data: JsObject): Future[JsObject] {. importc .}
@@ -20,12 +19,10 @@ when defined(js):
   proc fwrap*[T](it: T): Future[T] =
     PromiseObj.resolve(it)
 
-  export jsffi
+  export asyncjs
 
 else:
-  import json, asyncdispatch
-
-  type WObject* = JsonNode
+  import asyncdispatch
 
   proc then*[T, R](future: Future[T], cb: proc (t: T): R {.gcsafe.}): Future[R] =
     let rv = newFuture[R]("then")
@@ -52,4 +49,4 @@ else:
     result = newFuture[T]()
     result.complete(it)
 
-  export json
+  export asyncdispatch

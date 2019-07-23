@@ -21,14 +21,10 @@ proc procDefs(node: NimNode): seq[NimNode] =
 
 proc serviceImports(): NimNode =
   result = quote do:
-    import nerve/utils
+    import nerve/promises
     import nerve/web
     import nerve/types
-    when not defined(js):
-      import asyncdispatch
-      import nerve/serverRuntime
-    else:
-      import asyncjs
+    import nerve/serverRuntime
     import nerve/clientRuntime
 
 proc compiletimeReference(name: NimNode): NimNode =

@@ -1,8 +1,4 @@
-import utils
-when not defined(js):
-  import asyncdispatch
-else:
-  import asyncjs
+import promises, web
 
 type RpcServiceKind* = enum rskClient, rskServer
 
@@ -12,4 +8,4 @@ type RpcServiceInst* = object of RootObj
 type RpcService* = distinct string
 proc `$`*(s: RpcService): string {.borrow.}
 
-type NerveDriver* = proc (req: WObject): Future[WObject]
+type NerveDriver* = proc (req: JsObject): Future[JsObject]

@@ -1,8 +1,7 @@
+import nerve/promises
 when defined(js):
-  import asyncjs
   const host = ""
 else:
-  import asyncdispatch
   const host = "http://127.0.0.1:1234"
 
 import unittest, nerve, nerve/clientRuntime

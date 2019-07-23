@@ -4,7 +4,6 @@ type
   InvalidResponseError* = ref object of CatchableError
   RpcError* = ref object of CatchableError
 
-
 proc handleRpcResponse*[T](rpcResponse: JsObject): T =
   if hasKey(rpcResponse, "error"):
     let error = rpcResponse["error"]
@@ -29,5 +28,3 @@ else:
       return respJson(resp)
     let msg = "Invalid Response: Server responsed with code " & $to(resp.status, int)
     raise InvalidResponseError(msg: msg)
-
-  var JSON* {. importc, nodecl .}: JsObject

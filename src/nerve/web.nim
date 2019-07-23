@@ -4,16 +4,17 @@ when not defined(js):
   type wstring* = string
   type JsObject* = JsonNode
 
-  template toJs(x: untyped): untyped = % x
+  template toJs*(x: untyped): untyped = % x
   const newJsObject* = newJObject
 
-
   export json
+
 else:
   import jsffi
 
   type wstring* = cstring
 
+  var JSON* {. importc, nodecl .}: JsObject
   proc parseJson* (data: cstring): JsObject {. importcpp: "JSON.parse(#)", nodecl .}
   proc `$`* (jsObject: JsObject): string {. importcpp: "JSON.stringify(#)", nodecl .}
 

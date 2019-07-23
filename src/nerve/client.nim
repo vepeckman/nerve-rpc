@@ -8,8 +8,6 @@ proc networkProcBody(p: NimNode, methodName: string): NimNode =
   let params = formalParams.getParams()
   let req = genSym()
   let driver = ident("nerveDriver")
-  let newJsObject = if defined(js): ident("newJsObject") else: ident("newJObject")
-  let toJs = if defined(js): ident("toJs") else: ident("%")
 
   var paramJson = nnkStmtList.newTree()
   for param in params:
@@ -17,15 +15,15 @@ proc networkProcBody(p: NimNode, methodName: string): NimNode =
     let name = param["name"]
     paramJson.add(
       quote do:
-        `req`["params"][`nameStr`] = `toJs` `name`
+        `req`["params"][`nameStr`] = toJs `name`
     )
   
   result = quote do:
-    let `req` = `newJsObject`()
-    `req`["jsonrpc"] = `toJs` "2.0"
-    `req`["id"] = `toJs` 0
-    `req`["method"] = `toJs` `methodName`
-    `req`["params"] = `newJsObject`()
+    let `req` = newJsObject()
+    `req`["jsonrpc"] = toJs "2.0"
+    `req`["id"] = toJs 0
+    `req`["method"] = toJs `methodName`
+    `req`["params"] = newJsObject()
     `paramJson`
     result = `driver`(`req`)
       .then(handleRpcResponse[`retType`])
@@ -45,4 +43,3 @@ proc networkProcs*(procs: seq[NimNode]): NimNode =
       )
     )
     result.add(networkProc)
-
