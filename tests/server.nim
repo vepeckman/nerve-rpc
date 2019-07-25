@@ -6,7 +6,7 @@ let server = newAsyncHttpServer()
 proc generateCb(): proc (req: Request): Future[void] {.gcsafe.} =
 
   let personServer = PersonService.newServer()
-  let greetingServer = GreetingService.newServer()
+  let greetingServer = GreetingService.newServer(count = 1)
   let fileServer = FileService.newServer()
 
   proc cb(req: Request) {.async, gcsafe.} =

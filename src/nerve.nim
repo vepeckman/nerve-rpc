@@ -7,11 +7,13 @@ macro service*(name: untyped, uri: untyped = nil, body: untyped = nil): untyped 
   else:
     result = rpcService(name, "", uri)
 
-macro newServer*(rpc: static[RpcService]): untyped =
+macro newServer*(rpc: static[RpcService], injections: varargs[untyped]): untyped =
   let rpcName = $rpc
   let serverFactoryProc = rpcServerFactoryProc(rpcName)
   result = quote do:
     `serverFactoryProc`()
+  for injection in injections:
+    result.add(injection)
 
 macro newClient*(rpc: static[RpcService], driver: NerveDriver): untyped =
   let clientFactoryProc = rpcClientFactoryProc($rpc)

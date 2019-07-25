@@ -26,7 +26,7 @@ proc rpcServiceType*(name: string, procs: seq[NimNode]): NimNode =
   for p in procs:
     var procType = nnkProcTy.newTree()
     procType.add(p.findChild(it.kind == nnkFormalParams))
-    procType.add(newEmptyNode())
+    procType.add(nnkPragma.newTree(ident("gcsafe")))
     procFields.add(
       newIdentDefs(postfix(p[0].basename, "*"), procType)
     )
@@ -44,7 +44,7 @@ proc rpcServiceObject*(name: string, procs: Table[string, NimNode], kind: RpcSer
     var field = newColonExpr(procs[pName][0].basename, ident(pName))
     result.add(field)
 
-proc paramType(param: NimNode): NimNode =
+proc paramType*(param: NimNode): NimNode =
   # Either returns the type node of the param
   # or creates a node that gets the type of default value
   let defaultIdx = param.len - 1

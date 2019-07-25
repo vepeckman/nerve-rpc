@@ -8,4 +8,4 @@ type RpcServiceInst* = object of RootObj
 type RpcService* = distinct string
 proc `$`*(s: RpcService): string {.borrow.}
 
-type NerveDriver* = proc (req: JsObject): Future[JsObject]
+type NerveDriver* = proc (req: JsObject): Future[JsObject] {.gcsafe.}
