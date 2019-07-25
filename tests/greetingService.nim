@@ -1,6 +1,12 @@
-import nerve, nerve/utils
+import nerve, nerve/web
 
-rpc GreetingService, "/api/greeting":
+service GreetingService, "/api/greeting":
+
+  inject:
+    var 
+      id = 100
+      count: int
+    var uuid = "asdf"
 
   proc greet(greeting = wstring("Hello"), name = wstring("World")): Future[wstring] =
     fwrap(greeting & " " & name)

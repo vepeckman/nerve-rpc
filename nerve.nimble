@@ -1,8 +1,8 @@
 # Package
 
-version       = "0.1.1"
+version       = "0.2.0"
 author        = "nepeckman"
-description   = "A new awesome nimble package"
+description   = "An RPC framework"
 license       = "MIT"
 srcDir        = "src"
 
