@@ -15,6 +15,6 @@ else:
     result = proc (req: JsObject): Future[JsObject] =
       let msg = newJsObject()
       msg["method"] = cstring"POST"
-      msg["body"] = JSON.stringify(req)
+      msg["body"] = $ req
       result = fetch(cstring(uri), msg)
         .then(respToJson)

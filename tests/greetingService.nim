@@ -9,5 +9,4 @@ service GreetingService, "/api/greeting":
     var uuid = "asdf"
 
   proc greet(greeting = wstring("Hello"), name = wstring("World")): Future[wstring] =
-    echo uuid
     fwrap(greeting & " " & name)
