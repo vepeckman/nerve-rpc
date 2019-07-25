@@ -1,5 +1,5 @@
 # Nerve RPC
-Nerve is a RPC framework in Nim designed to build Web facing APIs. It prioritizes flexibility, ease of use, and performance. Nerve provides a compile time macro that generates both an efficient router for dispatching RPC requests on the server, as well as a complete, fully typed, client for Nim's Javascript runtime.
+Nerve is a RPC framework for building APIs in Nim. It prioritizes flexibility, ease of use, and performance. Nerve provides a compile time macro that generates both an efficient router for dispatching RPC requests on the server, as well as a complete, fully typed, client for both native and JavaScript targets.
 
 ### Install
 Nerve is available on Nim's builtin package manager, [nimble](https://github.com/nim-lang/nimble).
@@ -81,12 +81,14 @@ else:
 ```nim
 macro service*(name: untyped, uri: untyped = nil, body: untyped = nil): untyped
 ```
-Nerve's `service` macro contains most of the functionality of the framework. It takes an identifier, an optional uri, and a list of normal Nim procedures as its body. It produces a RpcService (accessible via the identifier) that can be instantiated into either a client or a server object with fields for each of the provided procs. The client/server object's type is generated with it, but it extends the `RpcServerInst` type provided by Nerve. The macro generates functions to construct new clients and servers, accessible with the service identified. When compiled for Nim's native target, the macro also generates a dispatch function. The clients (available for both native and JS targets) are provided with a driver to handle constructing and sending the requests. The provided procedures must have a return type of `Future[T]`, as the client will always use these functions asynchronusly.
+Nerve's `service` macro contains most of the functionality of the framework. It takes an identifier, an optional uri, and a list of normal Nim procedures as its body. It produces a RpcService (accessible via the identifier) that can be instantiated into either a client or a server object with fields for each of the provided procs. The client/server object's type is generated with it, but it extends the `RpcServerInst` type provided by Nerve. The macro generates functions to construct new clients and servers, accessible with the service identifier. When compiled for Nim's native target, the macro also generates a dispatch function. The clients (available for both native and JS targets) are provided with a driver to handle constructing and sending the requests. The provided procedures must have a return type of `Future[T]`, as the client will always use these functions asynchronusly.
 
 As the files with the `service` macro need to be compiled for both native and JS targets, those files should focus _only_ on the API functionality. Server instantiation and heavier server logic should go elsewhere. Be aware that any types used by the API files also need to be accessible on both targets.
 
 # nerve/drivers
-`type NerveDriver* = proc (req: JsObject): Future[JsObject] {.gcsafe.}`
+```nim
+type NerveDriver* = proc (req: JsObject): Future[JsObject] {.gcsafe.}
+```
 As stated earlier, Nerve uses drivers to power its clients. The driver recieves a completed JSON RPC object, and is responsible for sending that to the server and returning the response. The `drivers` module provides common drivers (such as an http driver), but user defined drivers can be used as well.
 
 # nerve/web
