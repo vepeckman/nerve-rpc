@@ -1,5 +1,4 @@
 import web, promises
-import json
 
 type
   InvalidResponseError* = ref object of CatchableError
@@ -26,10 +25,8 @@ when defined(js):
   
   proc respText*(data: JsObject): Future[cstring] {. importcpp: "#.text()" .}
 
-
   proc handleFetchResponse*(resp: JsObject): Future[JsonNode] =
     if Boolean(resp.ok):
       return resp.respText().then(respToJson)
     let msg = "Invalid Response: Server responsed with code " & $to(resp.status, int)
     raise InvalidResponseError(msg: msg)
-

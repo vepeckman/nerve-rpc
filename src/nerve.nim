@@ -51,7 +51,7 @@ macro rpcType*(rpc: static[RpcService]): untyped =
   result = quote do:
     `typeName`
 
-macro routeRpc*(rpc: static[RpcService], server: RpcServiceInst, req: JsObject): untyped =
+macro routeRpc*(rpc: static[RpcService], server: RpcServiceInst, req: JsonNode): untyped =
   ## Macro to do the server side dispatch of the RPC request
   let rpcName = $rpc
   let routerProc = rpcName.rpcRouterProcName
