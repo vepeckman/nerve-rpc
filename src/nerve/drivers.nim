@@ -5,16 +5,16 @@ when not defined(js):
 
   proc newHttpDriver*(uri: string): NerveDriver =
     let client = newAsyncHttpClient()
-    result = proc (req: JsObject): Future[JsObject] {.async.} =
+    result = proc (req: JsonNode): Future[JsonNode] {.async.} =
       let res = await client.postContent(uri, $ req)
       result = res.respToJson()
 
 else:
 
   proc newHttpDriver*(uri: string): NerveDriver =
-    result = proc (req: JsObject): Future[JsObject] =
+    result = proc (req: JsonNode): Future[JsonNode] =
       let msg = newJsObject()
       msg["method"] = cstring"POST"
-      msg["body"] = $ req
+      msg["body"] = cstring($ req)
       result = fetch(cstring(uri), msg)
-        .then(respToJson)
+        .then(handleFetchResponse)

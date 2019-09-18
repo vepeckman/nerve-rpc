@@ -14,15 +14,15 @@ proc networkProcBody(p: NimNode, methodName: string): NimNode =
     let name = param["name"]
     paramJson.add(
       quote do:
-        `req`["params"][`nameStr`] = toJs `name`
+        `req`["params"][`nameStr`] = % `name`
     )
   
   result = quote do:
-    let `req` = newJsObject()
-    `req`["jsonrpc"] = toJs "2.0"
-    `req`["id"] = toJs 0
-    `req`["method"] = toJs `methodName`
-    `req`["params"] = newJsObject()
+    let `req` = newJObject()
+    `req`["jsonrpc"] = % "2.0"
+    `req`["id"] = % 0
+    `req`["method"] = % `methodName`
+    `req`["params"] = newJObject()
     `paramJson`
     result = `driver`(`req`)
       .then(handleRpcResponse[`retType`])

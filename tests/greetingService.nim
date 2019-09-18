@@ -8,5 +8,5 @@ service GreetingService, "/api/greeting":
       count: int
     var uuid = "asdf"
 
-  proc greet(greeting = wstring("Hello"), name = wstring("World")): Future[wstring] =
+  proc greet(greeting = "Hello", name = "World" ): Future[string] =
     fwrap(greeting & " " & name)

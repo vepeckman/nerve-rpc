@@ -1,5 +1,6 @@
+import json
+export json
 when not defined(js):
-  import json
 
   type wstring* = string
   type JsObject* = JsonNode
@@ -7,7 +8,6 @@ when not defined(js):
   template toJs*(x: untyped): untyped = % x
   const newJsObject* = newJObject
 
-  export json
 
 else:
   import jsffi
