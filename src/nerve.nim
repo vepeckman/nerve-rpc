@@ -1,5 +1,5 @@
 import macros
-import nerve/service, nerve/types, nerve/common, nerve/web, nerve/drivers
+import nerve/service, nerve/types, nerve/common, nerve/web, nerve/drivers, nerve/configure
 
 macro service*(name: untyped, uri: untyped = nil, body: untyped = nil): untyped =
   ## Macro to create a RpcService. The name param is the identifier used to reference
@@ -64,5 +64,9 @@ macro routeRpc*(rpc: static[RpcService], server: RpcServiceInst, req: string): u
   let routerProc = rpcName.rpcRouterProcName
   result = quote do:
     `routerProc`(`server`, `req`)
+
+macro configureNerve*(config: untyped) =
+  ## Macro to configure which services should generate server code or client code
+  mergeConfigObject(config)
 
 export types, drivers

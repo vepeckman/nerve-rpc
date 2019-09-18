@@ -1,6 +1,5 @@
-import macros, tables, sequtils
-import types, common, server, client, factories
-
+import macros, tables, sequtils, options
+import types, common, configure, server, client, factories
 
 proc checkParams(formalParams: NimNode) =
   # Ensure return types are future
@@ -24,6 +23,22 @@ proc serverInjection(node: NimNode): seq[Table[string, NimNode]] =
             "default": declaration[2]
           }.toTable)
 
+proc serviceImports(node: NimNode, id: string): Option[NimNode] =
+  result = none(NimNode)
+  let importStmt = node.findChild(it.kind == nnkCall and it[0] == ident(id))
+  if importStmt.kind != nnkNilLit:
+    var generatedImports = nnkImportStmt.newTree()
+    for idx in 1 ..< importStmt.len:
+      generatedImports.add(importStmt[idx])
+    result = some(generatedImports)
+
+proc serviceSetup(node: NimNode, id: string): Option[NimNode] =
+  result = none(NimNode)
+  let setupStmt = node.findChild(it.kind == nnkCall and it[0] == ident(id) and it[1].kind == nnkStmtList)
+  if setupStmt.kind != nnkNilLit:
+    echo treerepr setupStmt[1]
+    result = some(setupStmt[1])
+
 proc procDefs(node: NimNode): seq[NimNode] =
   # Gets all the proc definitions from the statement list
   for child in node:
@@ -32,6 +47,7 @@ proc procDefs(node: NimNode): seq[NimNode] =
       result.add(child)
 
 proc serviceImports(): NimNode =
+  # TODO: Prune this
   result = quote do:
     import nerve/promises
     import nerve/web
@@ -47,19 +63,37 @@ proc compiletimeReference(name: NimNode): NimNode =
 proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   let procs = procDefs(body)
   let nameStr = name.strVal()
-  let injections = serverInjection(body)
   let serviceType = rpcServiceName(nameStr)
+
+  let config = getConfig(nameStr)
+  let isServer = config in [sckServer, sckFull]
+  let isClient = config in [sckClient, sckFull]
+
+  let injections = serverInjection(body)
+  let serverImports = serviceImports(body, "serverImports")
+  let clientImports = serviceImports(body, "clientImports")
+  let serverSetup = serviceSetup(body, "server")
+  let clientSetup = serviceSetup(body, "client")
+
   result = newStmtList()
   result.add(serviceImports())
-  if not defined(js):
+  if isServer:
+    result.add(if serverImports.isSome: serverImports.get() else: newEmptyNode())
     result.add(procs.mapIt(localProc(it, injections)).toStmtList())
-  result.add(networkProcs(procs))
+  if isClient:
+    result.add(if clientImports.isSome: clientImports.get() else: newEmptyNode())
+    result.add(networkProcs(procs))
   result.add(rpcServiceType(nameStr, procs))
   result.add(rpcUriConst(nameStr, uri))
-  if not defined(js):
+  if isServer:
     result.add(serverDispatch(nameStr, procs))
     result.add(rpcServerFactory(nameStr, serviceType, procs, injections))
-  result.add(rpcClientFactory(nameStr, serviceType, procs))
+  if isClient:
+    result.add(rpcClientFactory(nameStr, serviceType, procs))
   result.add(compiletimeReference(name))
+  if isServer and serverSetup.isSome:
+    result.add(serverSetup.get())
+  if isClient and clientSetup.isSome:
+    result.add(clientSetup.get())
   if defined(nerveRpcDebug):
     echo repr result
