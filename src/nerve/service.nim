@@ -36,7 +36,6 @@ proc serviceSetup(node: NimNode, id: string): Option[NimNode] =
   result = none(NimNode)
   let setupStmt = node.findChild(it.kind == nnkCall and it[0] == ident(id) and it[1].kind == nnkStmtList)
   if setupStmt.kind != nnkNilLit:
-    echo treerepr setupStmt[1]
     result = some(setupStmt[1])
 
 proc procDefs(node: NimNode): seq[NimNode] =
