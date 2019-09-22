@@ -19,7 +19,6 @@ service OneFile, "/api":
 
       proc cb(req: Request) {.async, gcsafe.} =
         let body = req.body
-        echo req.url.path
         case req.url.path
         of OneFile.rpcUri:
           await req.respond(Http200, $ await OneFile.routeRpc(oneFile, body))

@@ -87,8 +87,8 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
     proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: JsonNode): Future[JsonNode] {.async.} =
       assert(`serverSym`.kind == rskServer, "Only Nerve Servers can do routing")
       var `responseSym` = newNerveResponse()
+      `responseSym`["id"] = if `requestSym`.hasKey("id"): `requestSym`["id"] else: newJNull()
       if not nerveValidateRequest(`requestSym`):
-        `responseSym`["id"] = if `requestSym`.hasKey("id"): `requestSym`["id"] else: newJNull()
         `responseSym`["error"] = newNerveError(-32600, "Invalid Request")
       try:
         let `methodSym` = nerveGetMethod[`enumSym`](`requestSym`)

@@ -81,7 +81,7 @@ proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
     result.add(procs.mapIt(localProc(it, injections)).toStmtList())
   if isClient:
     result.add(if clientImports.isSome: clientImports.get() else: newEmptyNode())
-    result.add(networkProcs(procs))
+    result.add(networkProcs(procs, uri))
   result.add(rpcServiceType(nameStr, procs))
   result.add(rpcUriConst(nameStr, uri))
   if isServer:
