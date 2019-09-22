@@ -15,9 +15,9 @@ when defined(js):
 
   type Promise = distinct JsObject
   var PromiseObj {. importc: "Promise", nodecl .}: Promise
+  proc newFuture[T](it: T): Future[T] {. importcpp: "Promise.resolve(#)" .}
   proc resolve[T](promise: Promise, it: T): Future[T] {.importcpp: "#.resolve(@)".}
-  proc fwrap*[T](it: T): Future[T] =
-    PromiseObj.resolve(it)
+  proc fwrap*[T](it: T, procname = ""): Future[T] = newFuture(it)
 
   export asyncjs
 
@@ -45,8 +45,8 @@ else:
       rv.complete()
     result = rv
 
-  proc fwrap*[T](it: T): Future[T] =
-    result = newFuture[T]()
+  proc fwrap*[T](it: T, procname = ""): Future[T] =
+    result = newFuture[T](procname)
     result.complete(it)
 
   export asyncdispatch

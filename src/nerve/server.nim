@@ -107,8 +107,7 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
         let requestJson = parseJson(`requestSym`)
         result = `routerSym`(`serverSym`, requestJson)
       except CatchableError as e:
-        result = newFuture[JsonNode](`routerName`)
         var response = newNerveResponse()
         response["error"] = newNerveError(-32700, "Parse error", e)
-        result.complete(response)
+        result = fwrap(response)
   )

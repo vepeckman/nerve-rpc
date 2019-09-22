@@ -66,7 +66,7 @@ else:
   proc newNerveResponse*(): JsonNode =
     result = newJObject()
     result["jsonrpc"] = % "2.0"
-    result["id"] = % nil
+    result["id"] = % newJNull()
 
   proc newNerveError*(code: int, message: string): JsonNode =
     result = newJObject()
