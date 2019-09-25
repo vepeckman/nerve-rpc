@@ -7,7 +7,7 @@ else:
 
 service OneFile, "/api":
 
-  serverImports(asyncHttpServer)
+  serverImports(asyncHttpServer, ../utils)
 
   proc greet(name = "world"): Future[string] = fwrap("Hello " & name)
 
@@ -22,6 +22,10 @@ service OneFile, "/api":
         case req.url.path
         of OneFile.rpcUri:
           await req.respond(Http200, $ await OneFile.routeRpc(oneFile, body))
+        of "/client.js":
+          await req.clientJs("tests/oneFile", "oneFile.js")
+        of "/":
+          await req.indexHtml()
         else:
           await req.respond(Http404, "Not Found")
 
@@ -31,8 +35,16 @@ service OneFile, "/api":
 
   client:
     proc main() {.async.} =
-      let oneFile = OneFile.newHttpClient("http://127.0.0.1:1234")
+      when defined(js):
+        const host = ""
+      else:
+        const host = "http://127.0.0.1:1234"
+
+      let oneFile = OneFile.newHttpClient(host)
 
       echo await oneFile.greet("Nerve")
     
-    waitFor main()
+    when defined(js):
+      discard main()
+    else:
+      waitFor main()

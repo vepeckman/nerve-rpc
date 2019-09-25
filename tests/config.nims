@@ -1,2 +1,2 @@
 switch("path", "$projectDir/../src")
-switch("o", "tests/nimcache/")
+switch("outDir", projectDir() & "/nimcache")

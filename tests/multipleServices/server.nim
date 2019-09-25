@@ -1,4 +1,4 @@
-import asyncHttpServer, asyncdispatch, json
+import asyncHttpServer, asyncdispatch, json, ../utils
 import personService, greetingService, fileService, nerve
 
 let server = newAsyncHttpServer()
@@ -19,11 +19,9 @@ proc generateCb(): proc (req: Request): Future[void] {.gcsafe.} =
     of FileService.rpcUri:
       await req.respond(Http200, $ await FileService.routeRpc(fileServer, body))
     of "/client.js":
-      let headers = newHttpHeaders()
-      headers["Content-Type"] = "application/javascript"
-      await req.respond(Http200, readFile("tests/nimcache/client.js"), headers)
+      await req.clientJs("tests/multipleServices")
     of "/":
-      await req.respond(Http200, """<html><head><meta charset="UTF-8"></head><body>Testing</body><script src="client.js"></script></html>""")
+      await req.indexHtml()
     else:
       await req.respond(Http404, "Not Found")
 
