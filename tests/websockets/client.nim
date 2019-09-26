@@ -1,4 +1,5 @@
 import nerve, nerve/promises
+import nerve/drivers
 configureNerve({HelloService: sckClient})
 import helloService
 
@@ -13,14 +14,9 @@ proc main() {.async.} =
     let hello = HelloService.newClient(newWsDriver(ws))
     echo await hello.greet("Nerve")
   else:
-    {. emit: "var ws = new WebSocket('ws://127.0.01:1234/ws');" .}
-    var ws {. importc, nodecl .}: JsObject
-    let openCb = proc () {.async.} =
-      echo "connection made"
-      let hello = HelloService.newClient(newWsDriver(ws))
-      echo await hello.greet("Nerve")
-
-    ws.addEventListener(cstring"open", openCb)
+    let ws = newWebSocket(cstring"ws://127.0.01:1234/ws")
+    let hello = HelloService.newClient(newWsDriver(ws))
+    echo await hello.greet()
 
 when not defined(js):
   waitFor main()
