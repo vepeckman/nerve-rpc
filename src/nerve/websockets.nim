@@ -60,8 +60,10 @@ else:
 
   type WebSocket* = ref object
     nativeSocket: ws.WebSocket
+    isOpen: bool
     requestResolvers: TableRef[string, Future[JsonNode]]
     responseResolvers: seq[Future[JsonNode]]
+    responseQueue: seq[JsonNode]
 
   proc receiveData(websocket: WebSocket) {.async.} =
     let socket = websocket.nativeSocket
@@ -70,6 +72,7 @@ else:
       try:
         packet = await ws.receiveStrPacket(socket)
       except:
+        websocket.isOpen = false
         echo "connection lost"
       let message = parseJson(packet)
       if message.hasKey("result"):
@@ -81,16 +84,21 @@ else:
         for idx in fulfilled:
           websocket.requestResolvers.del(idx)
       elif message.hasKey("method"):
-        for future in websocket.responseResolvers:
-          future.complete(message)
-        websocket.responseResolvers = @[]
+        if websocket.responseResolvers.len > 0:
+          for future in websocket.responseResolvers:
+            future.complete(message)
+          websocket.responseResolvers = @[]
+        else:
+          websocket.responseQueue.add(message)
 
   proc newWebSocket*(uri: string): Future[WebSocket] {.async.} =
     let socket = await ws.newWebSocket(uri)
     var websocket = WebSocket(
       nativeSocket: socket,
+      isOpen: true,
       requestResolvers: newTable[string, Future[JsonNode]](),
-      responseResolvers: @[]
+      responseResolvers: @[],
+      responseQueue: @[]
     )
     discard receiveData(websocket)
     result = websocket
@@ -118,6 +126,11 @@ else:
     await ws.send(socket, $ resp)
 
   proc receiveRequest*(websocket: WebSocket): Future[JsonNode] {.async.} =
-    let f = newFuture[JsonNode]()
-    websocket.responseResolvers.add(f)
-    result = await f
+    if websocket.responseQueue.len > 0:
+      result = websocket.responseQueue.pop()
+    else:
+      let f = newFuture[JsonNode]()
+      websocket.responseResolvers.add(f)
+      result = await f
+
+  proc isOpen*(websocket: Websocket): bool = websocket.isOpen

@@ -1,16 +1,11 @@
-import nerve/promises
-when defined(js):
-  const host = ""
-else:
-  const host = "http://127.0.0.1:1234"
-
-import unittest, nerve, nerve/clientRuntime
+import unittest
+import nerve, nerve/promises, nerve/clientRuntime
 import personService, greetingService, fileService
 
-proc main() {.async.} =
-  let personClient = PersonService.newHttpClient(host)
-  let greetingClient = GreetingService.newHttpClient(host)
-  let fileClient = FileService.newHttpClient(host)
+proc runSuite*(
+  personClient: PersonService.rpcType,
+  greetingClient: GreetingService.rpcType,
+  fileClient: FileService.rpcType) {.async.} =
 
   suite "Sanity":
 
@@ -59,9 +54,3 @@ proc main() {.async.} =
     test "No params":
       let msg = await personClient.helloWorld()
       check(msg == "Hello world")
-
-
-when defined(js):
-  discard main()
-else:
-  waitFor main()

@@ -8,7 +8,7 @@ type
     self*: Person
     children*: seq[Person]
 
-service PersonService, "/api/person":
+service MainService, "/api/person":
   proc helloWorld(): Future[string] = fwrap("Hello world")
 
   proc hello(name = "World"): Future[string] = fwrap("Hello " & name)
@@ -18,3 +18,6 @@ service PersonService, "/api/person":
   proc newPerson(name: string, age: int): Future[Person] = fwrap(Person(name: name, age: age))
 
   proc newParent(person: Person, child: Person): Future[Parent] = fwrap(Parent(self: person, children: @[child]))
+
+  proc greet(greeting = "Hello", name = "World" ): Future[string] =
+    fwrap(greeting & " " & name)
