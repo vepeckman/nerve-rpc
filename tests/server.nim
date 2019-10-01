@@ -16,7 +16,7 @@ proc generateCb(): proc (req: Request): Future[void] {.gcsafe.} =
       await req.respond(Http200, $ await MainService.routeRpc(mainServer, body))
     of "/ws":
       let ws = await newWebSocket(req)
-      proc serveWs(req: JsonNode) {.async.} =
+      proc serveWs(req: auto) {.async.} =
         await ws.sendResponse(await MainService.routeRpc(mainServer, req))
       ws.onRequestReceived(serveWs)
       let mainClient = MainService.newClient(newWsDriver(ws))

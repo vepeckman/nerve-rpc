@@ -14,14 +14,15 @@ const wsHost = "ws://127.0.0.1:1234/ws"
 
 let mainServer = MainService.newServer()
 
+proc serveWs(ws: WebSocket): auto =
+  result = proc (req: JsonNode) {.async.} =
+    await ws.sendResponse(await MainService.routeRpc(mainServer, req))
 
 proc main() {.async.} =
   let mainHttp = MainService.newHttpClient(host)
   await runMainSuite(mainHttp)
   let ws = await newWebSocket(wsHost)
-  proc serveWs(req: JsonNode) {.async.} =
-    await ws.sendResponse(await MainService.routeRpc(mainServer, req))
-  ws.onRequestReceived(serveWs)
+  ws.onRequestReceived(serveWs(ws))
   let mainWs = MainService.newClient(newWsDriver(ws))
   await runMainSuite(mainWs)
 
