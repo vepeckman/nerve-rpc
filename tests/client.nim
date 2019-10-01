@@ -1,3 +1,4 @@
+import json
 import nerve, nerve/promises, nerve/websockets
 configureNerve({
   MainService: sckFull
@@ -13,16 +14,14 @@ const wsHost = "ws://127.0.0.1:1234/ws"
 
 let mainServer = MainService.newServer()
 
-proc serveWs(ws: WebSocket) {.async.} =
-  while true:
-    let req = await ws.receiveRequest()
-    await ws.sendResponse(await MainService.routeRpc(mainServer, req))
 
 proc main() {.async.} =
   let mainHttp = MainService.newHttpClient(host)
   await runMainSuite(mainHttp)
   let ws = await newWebSocket(wsHost)
-  discard serveWs(ws)
+  proc serveWs(req: JsonNode) {.async.} =
+    await ws.sendResponse(await MainService.routeRpc(mainServer, req))
+  ws.onRequestReceived(serveWs)
   let mainWs = MainService.newClient(newWsDriver(ws))
   await runMainSuite(mainWs)
 

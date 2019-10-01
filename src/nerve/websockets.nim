@@ -1,19 +1,21 @@
+import sequtils, tables, json, sugar
+import promises
+
 when defined(js):
-  import jsffi, tables, json
-  import promises
+  import jsffi
 
   proc NativeWebSocket(uri: cstring): JsObject {. importc: "WebSocket", nodecl .}
 
   type WebSocket* = ref object
     nativeSocket: JsObject
     requestResolvers: TableRef[string, proc (res: JsonNode)]
-    responseResolvers: seq[proc (res: JsonNode)]
+    receivers: seq[proc (res: JsonNode): Future[void]]
 
   proc newWebSocket*(uri: cstring): Future[WebSocket] =
     var ws = WebSocket(
       nativeSocket: jsNew NativeWebSocket(uri),
       requestResolvers: newTable[string, proc (res: JsonNode)](),
-      responseResolvers: @[]
+      receivers: @[]
     )
     let cb = proc (event: JsObject) =
       let data: cstring = cast[cstring](event.data)
@@ -27,9 +29,8 @@ when defined(js):
         for idx in fulfilled:
           ws.requestResolvers.del(idx)
       elif message.hasKey("method"):
-        for resolve in ws.responseResolvers:
-          resolve(message)
-        ws.responseResolvers = @[]
+        for listener in ws.receivers:
+          discard listener(message)
 
     ws.nativeSocket.addEventListener(cstring"message", cb)
 
@@ -48,21 +49,21 @@ when defined(js):
     ws.nativeSocket.send($ resp)
     result = newPromise[void](proc (res: proc ()) = res())
 
-  proc receiveRequest*(ws: WebSocket): Future[JsonNode] =
-    return newPromise[JsonNode](proc (resolve: proc (request: JsonNode)) =
-      ws.responseResolvers.add(resolve)
-    )
+  proc onRequestReceived*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
+    ws.receivers.add(cb)
+
+  proc removeRequestListener*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
+    ws.receivers = ws.receivers.filter((listener) => listener != cb)
 
 else:
-  import json, tables, asynchttpserver
+  import json, asynchttpserver
   from ws import nil
-  import promises
 
   type WebSocket* = ref object
     nativeSocket: ws.WebSocket
     isOpen: bool
     requestResolvers: TableRef[string, Future[JsonNode]]
-    responseResolvers: seq[Future[JsonNode]]
+    receivers: seq[proc (res: JsonNode): Future[void]]
     responseQueue: seq[JsonNode]
 
   proc receiveData(websocket: WebSocket) {.async.} =
@@ -84,12 +85,8 @@ else:
         for idx in fulfilled:
           websocket.requestResolvers.del(idx)
       elif message.hasKey("method"):
-        if websocket.responseResolvers.len > 0:
-          for future in websocket.responseResolvers:
-            future.complete(message)
-          websocket.responseResolvers = @[]
-        else:
-          websocket.responseQueue.add(message)
+        for listener in websocket.receivers:
+          discard listener(message)
 
   proc newWebSocket*(uri: string): Future[WebSocket] {.async.} =
     let socket = await ws.newWebSocket(uri)
@@ -97,7 +94,7 @@ else:
       nativeSocket: socket,
       isOpen: true,
       requestResolvers: newTable[string, Future[JsonNode]](),
-      responseResolvers: @[],
+      receivers: @[],
       responseQueue: @[]
     )
     discard receiveData(websocket)
@@ -108,7 +105,7 @@ else:
     var websocket = WebSocket(
       nativeSocket: socket,
       requestResolvers: newTable[string, Future[JsonNode]](),
-      responseResolvers: @[]
+      receivers: @[]
     )
     discard receiveData(websocket)
     result = websocket
@@ -125,12 +122,10 @@ else:
     let socket = websocket.nativeSocket
     await ws.send(socket, $ resp)
 
-  proc receiveRequest*(websocket: WebSocket): Future[JsonNode] {.async.} =
-    if websocket.responseQueue.len > 0:
-      result = websocket.responseQueue.pop()
-    else:
-      let f = newFuture[JsonNode]()
-      websocket.responseResolvers.add(f)
-      result = await f
+  proc onRequestReceived*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
+    ws.receivers.add(cb)
+
+  proc removeRequestListener*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
+    ws.receivers = ws.receivers.filter((listener) => listener != cb)
 
   proc isOpen*(websocket: Websocket): bool = websocket.isOpen

@@ -8,10 +8,6 @@ proc generateCb(): proc (req: Request): Future[void] {.gcsafe.} =
 
   let mainServer = MainService.newServer()
 
-  proc serveWs(ws: WebSocket) {.async.} =
-    while true:
-      let req = await ws.receiveRequest()
-      await ws.sendResponse(await MainService.routeRpc(mainServer, req))
 
   proc cb(req: Request) {.async, gcsafe.} =
     let body = req.body
@@ -20,7 +16,9 @@ proc generateCb(): proc (req: Request): Future[void] {.gcsafe.} =
       await req.respond(Http200, $ await MainService.routeRpc(mainServer, body))
     of "/ws":
       let ws = await newWebSocket(req)
-      discard serveWs(ws)
+      proc serveWs(req: JsonNode) {.async.} =
+        await ws.sendResponse(await MainService.routeRpc(mainServer, req))
+      ws.onRequestReceived(serveWs)
       let mainClient = MainService.newClient(newWsDriver(ws))
       await runMainSuite(mainClient)
     of "/client.js":
