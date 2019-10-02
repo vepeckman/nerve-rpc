@@ -23,7 +23,7 @@ proc main() {.async.} =
   await runMainSuite(mainHttp)
   let ws = await newWebSocket(wsHost)
   ws.onRequestReceived(serveWs(ws))
-  let mainWs = MainService.newClient(newWsDriver(ws))
+  let mainWs = MainService.newWsClient(ws)
   await runMainSuite(mainWs)
 
 

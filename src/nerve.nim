@@ -1,5 +1,5 @@
 import macros
-import nerve/service, nerve/types, nerve/common, nerve/web, nerve/drivers, nerve/configure
+import nerve/service, nerve/types, nerve/common, nerve/web, nerve/websockets, nerve/drivers, nerve/configure
 
 macro service*(name: untyped, uri: untyped = nil, body: untyped = nil): untyped =
   ## Macro to create a RpcService. The name param is the identifier used to reference
@@ -34,6 +34,14 @@ macro newHttpClient*(rpc: static[RpcService], host: static[string] = ""): untype
   let serviceName = ident($rpc)
   result = quote do:
     `clientFactoryProc`(newHttpDriver(`host` & `serviceName`.rpcUri))
+
+macro newWsClient*(rpc: static[RpcService], webSocket: WebSocket): untyped =
+  ## Macro to create a new client loaded with the websocket driver. The macro uses
+  ## the provided websocket which the user is responsible for initializing.
+  let clientFactoryProc = rpcClientFactoryProc($rpc)
+  let serviceName = ident($rpc)
+  result = quote do:
+    `clientFactoryProc`(newWsDriver(`websocket`))
 
 macro rpcUri*(rpc: static[RpcService]): untyped =
   ## Macro that provides a compile time reference to the 
