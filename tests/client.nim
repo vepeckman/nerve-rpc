@@ -1,8 +1,5 @@
 import json
 import nerve, nerve/promises, nerve/websockets
-configureNerve({
-  MainService: sckFull
-})
 import services/main, itests/mainSuite
 
 when defined(js):

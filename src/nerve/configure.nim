@@ -8,4 +8,7 @@ proc mergeConfigObject*(config: NimNode) =
     configTable.add(serviceConfig[0].strVal(), parseEnum[ServiceConfigKind](serviceConfig[1].strVal()))
 
 proc getConfig*(service: string): ServiceConfigKind =
-  if configTable.hasKey(service): configTable[service] elif defined(js): sckClient else: sckFull
+  if configTable.hasKey(service): configTable[service]
+  elif defined(nerveServer): sckServer
+  elif defined(nerveClient): sckClient
+  else: sckFull
