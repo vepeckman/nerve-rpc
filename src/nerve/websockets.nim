@@ -3,13 +3,30 @@ import promises
 
 when defined(js):
   import jsffi
+else:
+  from ws import send, receiveStrPacket, Open
+  import asyncHttpServer
 
-  proc NativeWebSocket(uri: cstring): JsObject {. importc: "WebSocket", nodecl .}
-
-  type WebSocket* = ref object
+type WebSocket* = ref object
+  when defined(js):
     nativeSocket: JsObject
     requestResolvers: TableRef[string, proc (res: JsonNode)]
-    receivers: seq[proc (res: JsonNode): Future[void]]
+  else:
+    nativeSocket: ws.WebSocket
+    requestResolvers: TableRef[string, Future[JsonNode]]
+  receivers: seq[proc (res: JsonNode): Future[void]]
+  isOpen: bool
+
+proc onRequestReceived*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
+  ws.receivers.add(cb)
+
+proc removeRequestListener*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
+  ws.receivers = ws.receivers.filter((listener) => listener != cb)
+
+proc isOpen*(websocket: Websocket): bool = websocket.isOpen
+
+when defined(js):
+  proc NativeWebSocket(uri: cstring): JsObject {. importc: "WebSocket", nodecl .}
 
   proc newWebSocket*(uri: cstring): Future[WebSocket] =
     var ws = WebSocket(
@@ -49,29 +66,14 @@ when defined(js):
     ws.nativeSocket.send($ resp)
     result = newPromise[void](proc (res: proc ()) = res())
 
-  proc onRequestReceived*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
-    ws.receivers.add(cb)
-
-  proc removeRequestListener*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
-    ws.receivers = ws.receivers.filter((listener) => listener != cb)
-
 else:
-  import json, asynchttpserver
-  from ws import nil
-
-  type WebSocket* = ref object
-    nativeSocket: ws.WebSocket
-    isOpen: bool
-    requestResolvers: TableRef[string, Future[JsonNode]]
-    receivers: seq[proc (res: JsonNode): Future[void]]
-    responseQueue: seq[JsonNode]
 
   proc receiveData(websocket: WebSocket) {.async.} =
     let socket = websocket.nativeSocket
-    while socket.readyState == ws.Open:
+    while socket.readyState == Open:
       var packet: string
       try:
-        packet = await ws.receiveStrPacket(socket)
+        packet = await socket.receiveStrPacket()
       except:
         websocket.isOpen = false
         echo "connection lost"
@@ -95,7 +97,6 @@ else:
       isOpen: true,
       requestResolvers: newTable[string, Future[JsonNode]](),
       receivers: @[],
-      responseQueue: @[]
     )
     discard receiveData(websocket)
     result = websocket
@@ -112,20 +113,10 @@ else:
 
 
   proc sendRequest*(websocket: WebSocket, req: JsonNode): Future[JsonNode] {.async.} =
-    let socket = websocket.nativeSocket
     let f = newFuture[JsonNode]()
     websocket.requestResolvers[req["id"].getStr()] = f
-    await ws.send(socket, $ req)
+    await websocket.nativeSocket.send($ req)
     result = await f
 
   proc sendResponse*(websocket: WebSocket, resp: JsonNode): Future[void] {.async.} =
-    let socket = websocket.nativeSocket
-    await ws.send(socket, $ resp)
-
-  proc onRequestReceived*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
-    ws.receivers.add(cb)
-
-  proc removeRequestListener*(ws: WebSocket, cb: proc (res: JsonNode): Future[void]) =
-    ws.receivers = ws.receivers.filter((listener) => listener != cb)
-
-  proc isOpen*(websocket: Websocket): bool = websocket.isOpen
+    await websocket.nativeSocket.send($ resp)
