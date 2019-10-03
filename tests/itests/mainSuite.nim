@@ -14,28 +14,9 @@ proc runMainSuite*(
       let helloWorld = await mainClient.hello()
       check(helloWorld == "Hello World")
 
-    test "Add":
-      let x = await mainClient.add()
-      let y = await mainClient.add(1)
-      let z = await mainClient.add(2, 3)
-      check(x == 0)
-      check(y == 1)
-      check(z == 5)
-
-    test "Person":
-      let person = await mainClient.newPerson("Nic", 24)
-      check(person.name == "Nic")
-
-    test "Parent":
-      let person = await mainClient.newPerson("Alex", 32)
-      let child = await mainClient.newPerson("James", 4)
-      let parent = await mainClient.newParent(person, child)
-      check(parent.self.name == "Alex")
-      check(parent.children[0].name == "James")
-
   suite "Proc arguments":
 
-    test "Multiple defaults":
+    test "Multiple defaults (a = x, b = y)":
       let g1 = await mainClient.greet()
       let g2 = await mainClient.greet(name = "Nic")
       let g3 = await mainClient.greet("Yo")
@@ -45,6 +26,34 @@ proc runMainSuite*(
       check(g3 == "Yo World")
       check(g4 == "Goodday child")
 
+    test "Multiple defaults (a, b = x)":
+      let x = await mainClient.add()
+      let y = await mainClient.add(1)
+      let z = await mainClient.add(2, 3)
+      check(x == 0)
+      check(y == 1)
+      check(z == 5)
+
     test "No params":
       let msg = await mainClient.helloWorld()
       check(msg == "Hello world")
+
+  suite "Objects":
+
+    test "Receive object":
+      let n = await mainClient.newNode("data", 1)
+      check(n.content.data == "data")
+      check(n.content.id == 1)
+
+    test "Send and receive object":
+      let content = Content(data: "info", id: 2)
+      let n = await mainClient.newLeaf(content)
+      check(n.content.data == "info")
+      check(n.content.id == 2)
+
+    test "Send seq":
+      let content = Content(data: "info", id: 2)
+      let n = Node(content: content)
+      let nc = await mainClient.newBranch(@[n])
+      check(nc.children.len == 1)
+      check(nc.children[0].content.data == "info")
