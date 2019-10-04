@@ -86,9 +86,9 @@ proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   result.add(rpcUriConst(nameStr, uri))
   if isServer:
     result.add(serverDispatch(nameStr, procs))
-    result.add(rpcServerFactory(nameStr, serviceType, procs, injections))
+    result.add(rpcServerFactory(nameStr, serviceType, uri, procs, injections))
   if isClient:
-    result.add(rpcClientFactory(nameStr, serviceType, procs))
+    result.add(rpcClientFactory(nameStr, serviceType, uri, procs))
   result.add(compiletimeReference(name))
   if isServer and serverSetup.isSome:
     result.add(serverSetup.get())

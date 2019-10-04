@@ -32,14 +32,15 @@ proc rpcServiceType*(name: string, procs: seq[NimNode]): NimNode =
     )
 
   result = quote do:
-    type `typeName`* = object of RpcServiceInst
+    type `typeName`* = object of RpcServiceInst[`typeName`]
   result[0][2][2] = procFields
 
-proc rpcServiceObject*(name: string, procs: Table[string, NimNode], kind: RpcServiceKind): NimNode =
+proc rpcServiceObject*(name: string, procs: Table[string, NimNode], kind: RpcServiceKind, uri: string): NimNode =
   let typeName = rpcServiceName(name)
   let kindName = ident($kind)
+  let routerName = rpcRouterProcName(name)
   result = quote do:
-    `typeName`(kind: `kindName`)
+    `typeName`(kind: `kindName`, uri: `uri`, nerveStrRpcRouter: `routerName`, nerveJsonRpcRouter: `routerName`)
   for pName in procs.keys:
     var field = newColonExpr(procs[pName][0].basename, ident(pName))
     result.add(field)

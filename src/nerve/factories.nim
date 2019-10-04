@@ -23,7 +23,9 @@ proc createClientProc(p: NimNode, name, networkProc: string, driver: NimNode): N
   result[result.len - 1] = procCall
   result[0] = ident(name)
 
-proc rpcServerFactory*(name: string, serviceType: NimNode, procs: seq[NimNode], injections: seq[Table[string, NimNode]]): NimNode =
+proc rpcServerFactory*(
+  name: string, serviceType: NimNode, uri: string,
+  procs: seq[NimNode], injections: seq[Table[string, NimNode]]): NimNode =
   let procName = rpcServerFactoryProc(name)
   var serverProcs = newStmtList()
   var procTable = initTable[string, NimNode]()
@@ -31,7 +33,7 @@ proc rpcServerFactory*(name: string, serviceType: NimNode, procs: seq[NimNode], 
     let serverProcName ="NerveServer" & p[0].basename.strVal()
     procTable[serverProcName] = p
     serverProcs.add(createServerProc(p, serverProcName, injections))
-  let service = rpcServiceObject(name, procTable, rskServer)
+  let service = rpcServiceObject(name, procTable, rskServer, uri)
   result = quote do:
     proc `procName`*(): `serviceType` =
       `serverProcs`
@@ -45,7 +47,7 @@ proc rpcServerFactory*(name: string, serviceType: NimNode, procs: seq[NimNode], 
     ))
 
 
-proc rpcClientFactory*(name: string, serviceType: NimNode, procs: seq[NimNode]): NimNode =
+proc rpcClientFactory*(name: string, serviceType: NimNode, uri: string, procs: seq[NimNode]): NimNode =
   let procName = rpcClientFactoryProc(name)
   let driverName = ident("nerveDriver")
   var clientProcs = newStmtList()
@@ -55,7 +57,7 @@ proc rpcClientFactory*(name: string, serviceType: NimNode, procs: seq[NimNode]):
     let clientProcName ="NerveClient" & pName
     procTable[clientProcName] = p
     clientProcs.add(createClientProc(p, clientProcName, pName, driverName))
-  let service = rpcServiceObject(name, procTable, rskClient)
+  let service = rpcServiceObject(name, procTable, rskClient, uri)
   result = quote do:
     proc `procName`*(`driverName`: NerveDriver): `serviceType` =
       `clientProcs`

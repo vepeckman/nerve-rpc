@@ -13,11 +13,11 @@ proc generateCb(): proc (req: Request): Future[void] {.gcsafe.} =
     let body = req.body
     case req.url.path
     of MainService.rpcUri:
-      await req.respond(Http200, $ await MainService.routeRpc(mainServer, body))
+      await req.respond(Http200, $ await mainServer.routeRpc(body))
     of "/ws":
       let ws = await newWebSocket(req)
       proc serveWs(req: auto) {.async.} =
-        await ws.sendResponse(await MainService.routeRpc(mainServer, req))
+        await ws.sendResponse(await mainServer.routeRpc(req))
       ws.onRequestReceived(serveWs)
       let mainClient = MainService.newClient(newWsDriver(ws))
       await runMainSuite(mainClient)
