@@ -2,23 +2,18 @@ import promises, web
 
 type RpcServiceKind* = enum rskClient, rskServer
 
-type RpcServiceInst*[T] = object of RootObj
+type RpcServiceInst* = object of RootObj
   uri*: string
-  nerveStrRpcRouter*: proc (server: T, request: string): Future[JsonNode]
-  nerveJsonRpcRouter*: proc (server: T, request: JsonNode): Future[JsonNode]
   kind*: RpcServiceKind
+  nerveStrRpcRouter*: proc (request: string): Future[JsonNode]
+  nerveJsonRpcRouter*: proc (request: JsonNode): Future[JsonNode]
 
-proc routeRpc*[T](server: T, req: string | JsonNode): Future[JsonNode] =
+# TODO: Move to main file
+proc routeRpc*(server: RpcServiceInst, req: string | JsonNode): Future[JsonNode] =
   when $typeof(req) == "string":
-    when not compiles(server.nerveStrRpcRouter(server, req)):
-      static:
-        assert(false, "Type error: `routeRpc` must receive a Nerve RPC service")
-    server.nerveStrRpcRouter(server, req)
+    server.nerveStrRpcRouter(req)
   else:
-    when not compiles(server.nerveJsonRpcRouter(server, req)):
-      static:
-        assert(false, "Type error: `routeRpc` must receive a Nerve RPC service")
-    server.nerveJsonRpcRouter(server, req)
+    server.nerveJsonRpcRouter(req)
 
 type RpcService* = distinct string
 proc `$`*(s: RpcService): string {.borrow.}
