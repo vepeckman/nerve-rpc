@@ -1,4 +1,4 @@
-import unittest
+import unittest, tables
 import nerve, nerve/promises
 import ../services/main
 
@@ -57,3 +57,10 @@ proc runMainSuite*(
       let nc = await mainClient.newBranch(@[n])
       check(nc.children.len == 1)
       check(nc.children[0].content.data == "info")
+
+    test "Recieve table":
+      let content = Content(data: "info", id: 2)
+      let n = Node(content: content)
+      let ntable = await mainClient.hashByContent(@[n])
+      check(not isNil(ntable["info"]))
+

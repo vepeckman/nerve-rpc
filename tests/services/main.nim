@@ -1,3 +1,4 @@
+import tables
 import nerve, nerve/web
 
 type
@@ -9,7 +10,7 @@ type
   NodeContainer* = ref object
     children*: seq[Node]
 
-service MainService, "/api/person":
+service MainService, "/api/main":
   proc helloWorld(): Future[string] = fwrap("Hello world")
 
   proc hello(name = "World"): Future[string] = fwrap("Hello " & name)
@@ -34,3 +35,9 @@ service MainService, "/api/person":
     NodeContainer(
       children: children
     ))
+
+  proc hashByContent(nodes: seq[Node]): Future[Table[string, Node]] =
+    var rv = initTable[string, Node]()
+    for node in nodes:
+      rv[node.content.data] = node
+    result = fwrap(rv)
