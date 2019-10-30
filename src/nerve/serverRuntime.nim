@@ -1,5 +1,5 @@
 import strutils, sequtils, json
-import promises, common
+import common
 when not defined(js):
   import os
 
@@ -8,6 +8,7 @@ type
   DispatchError* = ref object of CatchableError
   ParameterError* = ref object of CatchableError
 
+#TODO: clean up this file
 proc nerveValidateRequest*(req: JsonNode): bool =
   req.hasKey("jsonrpc") and req["jsonrpc"].getStr() == "2.0" and req.hasKey("id")
 

@@ -1,5 +1,3 @@
-import macros, json
-
 when defined(js):
   import asyncjs, jsffi
 
@@ -12,10 +10,7 @@ when defined(js):
   proc catch*[T, R](promise: Future[T], next: proc (data: T): R): Future[R] {. importcpp: "#.catch(@)" .}
   proc catch*[T](promise: Future[T], next: proc(data: T)): Future[void] {. importcpp: "#.catch(@)" .}
 
-  type Promise = distinct JsObject
-  var PromiseObj {. importc: "Promise", nodecl .}: Promise
   proc newFuture[T](it: T): Future[T] {. importcpp: "Promise.resolve(#)" .}
-  proc resolve[T](promise: Promise, it: T): Future[T] {.importcpp: "#.resolve(@)".}
   proc fwrap*[T](it: T, procname = ""): Future[T] = newFuture(it)
 
   export asyncjs

@@ -75,7 +75,6 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
     requestSym = ident("request") # The request parameter
     responseSym = ident("response")
     routerSym = rpcRouterProcName(name)
-    routerName = routerSym.strVal()
 
   let dispatchStatement = dispatch(procs, serverSym, methodSym, requestSym, responseSym)
   let enumDeclaration = enumDeclaration(enumSym, procs)

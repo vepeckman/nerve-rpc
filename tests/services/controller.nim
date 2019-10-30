@@ -1,4 +1,3 @@
-import sugar
 import nerve
 import view, model
 

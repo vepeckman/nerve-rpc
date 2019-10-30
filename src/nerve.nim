@@ -39,7 +39,6 @@ macro newWsClient*(rpc: static[RpcService], webSocket: WebSocket): untyped =
   ## Macro to create a new client loaded with the websocket driver. The macro uses
   ## the provided websocket which the user is responsible for initializing.
   let clientFactoryProc = rpcClientFactoryProc($rpc)
-  let serviceName = ident($rpc)
   result = quote do:
     `clientFactoryProc`(newWsDriver(`websocket`))
 
