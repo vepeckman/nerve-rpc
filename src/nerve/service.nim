@@ -45,8 +45,7 @@ proc procDefs(node: NimNode): seq[NimNode] =
       child.findChild(it.kind == nnkFormalParams).checkParams()
       result.add(child)
 
-proc serviceImports(): NimNode =
-  # TODO: Prune this
+proc nerveImports(): NimNode =
   result = quote do:
     import json
     import nerve/promises
@@ -75,7 +74,7 @@ proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   let clientSetup = serviceSetup(body, "client")
 
   result = newStmtList()
-  result.add(serviceImports())
+  result.add(nerveImports())
   if isServer:
     result.add(if serverImports.isSome: serverImports.get() else: newEmptyNode())
     result.add(procs.mapIt(localProc(it, injections)).toStmtList())

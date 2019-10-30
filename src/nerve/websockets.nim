@@ -1,6 +1,8 @@
 import sequtils, tables, json, sugar
 import promises
 
+#TODO: hook into websocket closing
+
 when defined(js):
   import jsffi
 else:
@@ -76,7 +78,6 @@ else:
         packet = await socket.receiveStrPacket()
       except:
         websocket.isOpen = false
-        echo "connection lost"
       let message = parseJson(packet)
       if message.hasKey("result"):
         var fulfilled: seq[string] = @[]

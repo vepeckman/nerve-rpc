@@ -9,13 +9,6 @@ type RpcServiceInst* = object of RootObj
   nerveStrRpcRouter*: proc (request: string): Future[JsonNode]
   nerveJsonRpcRouter*: proc (request: JsonNode): Future[JsonNode]
 
-# TODO: Move to main file
-proc routeRpc*(server: RpcServiceInst, req: string | JsonNode): Future[JsonNode] =
-  when $typeof(req) == "string":
-    server.nerveStrRpcRouter(req)
-  else:
-    server.nerveJsonRpcRouter(req)
-
 type RpcService* = distinct string
 proc `$`*(s: RpcService): string {.borrow.}
 

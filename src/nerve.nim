@@ -1,5 +1,5 @@
 import macros, json
-import nerve/service, nerve/types, nerve/common, nerve/websockets, nerve/drivers, nerve/configure
+import nerve/[service, types, common, promises, websockets, drivers, configure]
 
 macro service*(name: untyped, uri: untyped = nil, body: untyped = nil): untyped =
   ## Macro to create a RpcService. The name param is the identifier used to reference
@@ -57,6 +57,12 @@ macro rpcType*(rpc: static[RpcService]): untyped =
   let typeName = rpcServiceName($rpc)
   result = quote do:
     `typeName`
+
+proc routeRpc*(server: RpcServiceInst, req: string | JsonNode): Future[JsonNode] =
+  when $typeof(req) == "string":
+    server.nerveStrRpcRouter(req)
+  else:
+    server.nerveJsonRpcRouter(req)
 
 macro routeRpc*(rpc: static[RpcService], server: untyped, req: JsonNode): untyped =
   ## Macro to do the server side dispatch of the RPC request
