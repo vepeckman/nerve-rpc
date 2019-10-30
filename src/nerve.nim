@@ -10,15 +10,36 @@ macro service*(name: untyped, uri: untyped = nil, body: untyped = nil): untyped 
   else:
     result = rpcService(name, "", uri)
 
+macro inject*(injections: untyped): untyped =
+  assert(false, "inject may only be used inside a service definition")
+
+macro serverImport*(imports: untyped): untyped =
+  assert(false, "serverImport may only be used inside a service definition")
+
+macro clientImport*(imports: untyped): untyped =
+  assert(false, "clientImport may only be used inside a service definition")
+
+macro server*(serverStmts: untyped): untyped =
+  assert(false, "server may only be used inside a service definition")
+
+macro client*(clientStmts: untyped): untyped =
+  assert(false, "client may only be used inside a service definition")
+
 macro newServer*(rpc: static[RpcService], injections: varargs[untyped]): untyped =
   ## Macro to construct a new server for a RpcService. Injections can be provided
   ## for the server, if defined by an ``inject`` statement in the service.
   let rpcName = $rpc
   let serverFactoryProc = rpcServerFactoryProc(rpcName)
-  result = quote do:
+  let factoryCall = quote do:
     `serverFactoryProc`()
   for injection in injections:
-    result.add(injection)
+    factoryCall.add(injection)
+  result = quote do:
+    when not compiles(`factoryCall`):
+      static:
+        echo "Nerve Error: Call to " & `rpcName` & ".newServer doesn't include the proper injections"
+        echo "             Error in Nerve's generated server function printed below"
+    `factoryCall`
 
 macro newClient*(rpc: static[RpcService], driver: NerveDriver): untyped =
   ## Macro for constructing a new client for a RpcService. A driver can be

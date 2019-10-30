@@ -4,7 +4,6 @@ import services/[main, view, controller, model], itests/mainSuite
 
 let server = newAsyncHttpServer()
 
-
 proc generateCb(): proc (req: Request): Future[void] {.gcsafe.} =
 
   let mainServer = MainService.newServer()
