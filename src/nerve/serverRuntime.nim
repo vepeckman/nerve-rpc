@@ -1,5 +1,5 @@
-import strutils, sequtils
-import web, promises, common
+import strutils, sequtils, json
+import promises, common
 when not defined(js):
   import os
 

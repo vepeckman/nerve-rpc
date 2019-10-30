@@ -1,8 +1,7 @@
-import macros
-import web
+import macros, json
 
 when defined(js):
-  import asyncjs
+  import asyncjs, jsffi
 
   proc fetch*(uri: cstring): Future[JsObject] {. importc .}
   proc fetch*(uri: cstring, data: JsObject): Future[JsObject] {. importc .}

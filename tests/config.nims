@@ -1,2 +1,2 @@
-switch("path", "src/")
+switch("path", "../src/")
 switch("outDir", projectDir() & "/nimcache")

@@ -1,5 +1,5 @@
 import tables
-import nerve, nerve/web
+import nerve
 
 type
   Content* = ref object

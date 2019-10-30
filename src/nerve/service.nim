@@ -48,8 +48,8 @@ proc procDefs(node: NimNode): seq[NimNode] =
 proc serviceImports(): NimNode =
   # TODO: Prune this
   result = quote do:
+    import json
     import nerve/promises
-    import nerve/web
     import nerve/types
     import nerve/serverRuntime
     import nerve/clientRuntime

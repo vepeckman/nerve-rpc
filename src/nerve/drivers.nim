@@ -1,4 +1,5 @@
-import types, web, promises, clientRuntime
+import json
+import types, promises, clientRuntime
 
 var currentId {.threadvar.} : int
 currentId = 0

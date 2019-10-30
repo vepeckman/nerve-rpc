@@ -1,4 +1,5 @@
-import web, promises
+import json
+import promises
 
 type
   InvalidResponseError* = ref object of CatchableError
@@ -21,6 +22,8 @@ proc respToJson*(resp: string): JsonNode =
 proc respToJson*(resp: cstring): JsonNode = respToJson($ resp)
 
 when defined(js):
+  import jsffi
+
   proc Boolean(o: JsObject): bool {. importc .}
   
   proc respText*(data: JsObject): Future[cstring] {. importcpp: "#.text()" .}

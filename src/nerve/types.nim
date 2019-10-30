@@ -1,4 +1,5 @@
-import promises, web
+import json
+import promises
 
 type RpcServiceKind* = enum rskClient, rskServer
 
