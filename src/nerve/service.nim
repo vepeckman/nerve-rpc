@@ -45,13 +45,16 @@ proc procDefs(node: NimNode): seq[NimNode] =
       child.findChild(it.kind == nnkFormalParams).checkParams()
       result.add(child)
 
-proc nerveImports(): NimNode =
+proc nerveImports(config: ServiceConfigKind): NimNode =
+  let configName = ident($config)
   result = quote do:
     import json
     import nerve/promises
     import nerve/types
-    import nerve/serverRuntime
-    import nerve/clientRuntime
+    when `configName` != sckClient:
+      import nerve/serverRuntime
+    when `configName` != sckServer:
+      import nerve/clientRuntime
 
 proc compiletimeReference(name: NimNode): NimNode =
   let nameStr = name.strVal().newStrLitNode()
@@ -74,7 +77,7 @@ proc rpcService*(name: NimNode, uri: string, body: NimNode): NimNode =
   let clientSetup = serviceSetup(body, "client")
 
   result = newStmtList()
-  result.add(nerveImports())
+  result.add(nerveImports(config))
   if isServer:
     result.add(if serverImports.isSome: serverImports.get() else: newEmptyNode())
     result.add(procs.mapIt(localProc(it, injections)).toStmtList())

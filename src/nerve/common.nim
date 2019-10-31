@@ -42,8 +42,9 @@ proc rpcServiceObject*(name: string, procs: Table[string, NimNode], kind: RpcSer
   result = quote do:
     block:
       var service = `typeName`(kind: `kindName`, uri: `uri`)
-      service.nerveStrRpcRouter = proc (req: string): Future[JsonNode] = `routerName`(service, req)
-      service.nerveJsonRpcRouter = proc (req: JsonNode): Future[JsonNode] = `routerName`(service, req)
+      when `kindName` == rskServer:
+        service.nerveStrRpcRouter = proc (req: string): Future[JsonNode] = `routerName`(service, req)
+        service.nerveJsonRpcRouter = proc (req: JsonNode): Future[JsonNode] = `routerName`(service, req)
       service
   for pName in procs.keys:
     var field = newColonExpr(procs[pName][0].basename, ident(pName))
