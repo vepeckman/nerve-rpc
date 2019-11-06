@@ -2,7 +2,7 @@ import nerve
 
 service HelloService, "/api":
 
-  proc greet(name = "world"): Future[string] = fwrap("Hello " & name)
+  proc greet(name = "world"): Future[string] = futureWrap("Hello " & name)
 
   server:
     import asyncHttpServer

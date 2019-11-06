@@ -10,4 +10,4 @@ service ModelService, "/api/model":
 
   proc updateData(data: string): Future[string] =
     db.data = data
-    fwrap(data)
+    futureWrap(data)

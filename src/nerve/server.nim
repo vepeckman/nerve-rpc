@@ -114,5 +114,5 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
       except CatchableError as e:
         var response = newNerveResponse()
         response["error"] = newNerveError(-32700, "Parse error", e)
-        result = fwrap(response)
+        result = futureWrap(response)
   )

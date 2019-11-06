@@ -8,6 +8,6 @@ service ViewService, "/api/view":
   inject:
     var viewData = ViewData(html: "Hello world")
 
-  proc render(data: string): Future[bool] =
+  proc render(data: string): Future[void] =
     viewData.html = data
-    fwrap(true)
+    voidFuture()

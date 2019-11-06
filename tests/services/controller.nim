@@ -9,5 +9,5 @@ service ControllerService, "/api/controller":
 
   proc update(data: string): Future[string] =
     modelServer.updateData(data)
-      .then(proc (data: string): Future[bool] = viewClient.render(data))
-      .then(proc (resp: bool): string = data)
+      .then(proc (data: string): Future[void] = viewClient.render(data))
+      .then(proc (): string = data)
