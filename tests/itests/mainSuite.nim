@@ -14,6 +14,9 @@ proc runMainSuite*(
       let helloWorld = await mainClient.hello()
       check(helloWorld == "Hello World")
 
+    test "Void proc":
+      await mainClient.run()
+
   suite "Proc arguments":
 
     test "Multiple defaults (a = x, b = y)":

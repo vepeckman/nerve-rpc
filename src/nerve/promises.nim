@@ -11,12 +11,18 @@ when defined(js):
   proc catch*[T](promise: Future[T], next: proc(data: T)): Future[void] {. importcpp: "#.catch(@)" .}
 
   proc newFuture[T](it: T): Future[T] {. importcpp: "Promise.resolve(#)" .}
+  proc newFuture(): Future[void] {. importcpp: "Promise.resolve" .}
+  proc voidFuture*(): Future[void] = newFuture()
   proc fwrap*[T](it: T, procname = ""): Future[T] = newFuture(it)
 
   export asyncjs
 
 else:
   import asyncdispatch
+
+  proc voidFuture*(): Future[void] =
+    result = newFuture[void]()
+    result.complete()
 
   proc then*[T, R](future: Future[T], cb: proc (t: T): R {.gcsafe.}): Future[R] =
     let rv = newFuture[R]("then")

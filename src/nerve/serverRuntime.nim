@@ -9,6 +9,10 @@ type
   ParameterError* = ref object of CatchableError
 
 #TODO: clean up this file
+
+proc `%`*(x: void): JsonNode =
+  result = newJNull()
+
 proc nerveValidateRequest*(req: JsonNode): bool =
   req.hasKey("jsonrpc") and req["jsonrpc"].getStr() == "2.0" and req.hasKey("id")
 

@@ -40,7 +40,13 @@ proc procWrapper(serverSym, requestSym, responseSym, p: NimNode): NimNode =
 
   # Invoke the method with the params, convert to json, and return response
   result.add(quote do:
-      `responseSym`["result"] = % await `methodCall`
+      `responseSym`["result"] = block:
+        let future = `methodCall`
+        when $typeof(future) != "Future[system.void]":
+          % await future
+        else:
+          await future
+          newJNull()
   )
 
 proc dispatch(procs: seq[NimNode], serverSym, methodSym, requestSym, responseSym: NimNode): NimNode =

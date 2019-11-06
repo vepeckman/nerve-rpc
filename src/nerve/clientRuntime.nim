@@ -10,7 +10,8 @@ proc handleRpcResponse*[T](rpcResponse: JsonNode): T =
     let error = rpcResponse["error"]
     let msg = $error["message"] & ": " & $error["data"]["msg"] & "\n" & $error["data"]["stackTrace"] & "\n"
     raise RpcError(msg: msg)
-  rpcResponse["result"].to(T)
+  when $T != "void":
+    rpcResponse["result"].to(T)
 
 proc respToJson*(resp: string): JsonNode =
   try:

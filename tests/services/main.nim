@@ -20,6 +20,8 @@ service MainService, "/api/main":
   
   proc add(x, y = 0): Future[int] = fwrap(x + y)
 
+  proc run(): Future[void] = voidFuture()
+
   proc newNode(data: string, id: int): Future[Node] = fwrap(
     Node(
       content: Content(data: data, id: id),
