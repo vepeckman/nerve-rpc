@@ -11,18 +11,28 @@ macro service*(name: untyped, uri: untyped = nil, body: untyped = nil): untyped 
     result = rpcService(name, "", uri)
 
 macro inject*(injections: untyped): untyped =
+  ## Modifier for the ``service`` macro. A list of variable declarations
+  ## that will be injected into the RPC procs.
   assert(false, "inject may only be used inside a service definition")
 
 macro serverImport*(imports: untyped): untyped =
+  ## Modifier for the ``service`` macro. A list of modules to be imported
+  ## when the service is built as a server.
   assert(false, "serverImport may only be used inside a service definition")
 
 macro clientImport*(imports: untyped): untyped =
+  ## Modifier for the ``service`` macro. A list of modules to be imported
+  ## when the service is built as a client.
   assert(false, "clientImport may only be used inside a service definition")
 
 macro server*(serverStmts: untyped): untyped =
+  ## Modifier for the ``service`` macro. A code block to be executed when
+  ## the service is built as a server.
   assert(false, "server may only be used inside a service definition")
 
 macro client*(clientStmts: untyped): untyped =
+  ## Modifier for the ``service`` macro. A code block to be executed when
+  ## the service is built as a client.
   assert(false, "client may only be used inside a service definition")
 
 macro newServer*(rpc: static[RpcService], injections: varargs[untyped]): untyped =
@@ -80,19 +90,13 @@ macro rpcType*(rpc: static[RpcService]): untyped =
     `typeName`
 
 proc routeRpc*(server: RpcServiceInst, req: string | JsonNode): Future[JsonNode] =
+  ## Dispatch a rpc request for the provided rpc service, returns a rpc response
   when $typeof(req) == "string":
     server.nerveStrRpcRouter(req)
   else:
     server.nerveJsonRpcRouter(req)
 
-macro routeRpc*(rpc: static[RpcService], server: untyped, req: JsonNode): untyped =
-  ## Macro to do the server side dispatch of the RPC request
-  let rpcName = $rpc
-  let routerProc = rpcName.rpcRouterProcName
-  result = quote do:
-    `routerProc`(`server`, `req`)
-
-macro routeRpc*(rpc: static[RpcService], server: untyped, req: string): untyped =
+macro routeRpc*(rpc: static[RpcService], server: untyped, req: string | JsonNode): untyped =
   ## Macro to do the server side dispatch of the RPC request
   let rpcName = $rpc
   let routerProc = rpcName.rpcRouterProcName
@@ -100,7 +104,12 @@ macro routeRpc*(rpc: static[RpcService], server: untyped, req: string): untyped 
     `routerProc`(`server`, `req`)
 
 macro configureNerve*(config: untyped) =
-  ## Macro to configure which services should generate server code or client code
+  ## Macro to configure which services should generate server code or client code.
+  ## Takes a map of RPC Services to ServiceConfigKind.
   mergeConfigObject(config)
+
+macro setDefaultConfig*(config: static[ServiceConfigKind]) =
+  ## Set the default configuration for RPC Services.
+  setDefaultConfig(config)
 
 export types, drivers

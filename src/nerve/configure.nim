@@ -1,5 +1,7 @@
 import macros, tables, strutils, types
 
+var default {. compiletime .} = sckFull
+
 var configTable {. compiletime .} = initTable[string, ServiceConfigKind]()
 
 proc mergeConfigObject*(config: NimNode) =
@@ -11,4 +13,7 @@ proc getConfig*(service: string): ServiceConfigKind =
   if configTable.hasKey(service): configTable[service]
   elif defined(nerveServer): sckServer
   elif defined(nerveClient): sckClient
-  else: sckFull
+  else: default
+
+proc setDefaultConfig*(config: ServiceConfigKind) =
+  default = config

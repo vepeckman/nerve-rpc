@@ -11,6 +11,7 @@ when not defined(js):
   import httpClient
 
   proc newHttpDriver*(uri: string): NerveDriver =
+    ## A Nerve Driver that sends requests over HTTP
     let client = newAsyncHttpClient()
     result = proc (req: JsonNode): Future[JsonNode] {.async.} =
       let res = await client.postContent(uri, $ req)
@@ -20,6 +21,7 @@ else:
   import jsffi
 
   proc newHttpDriver*(uri: string): NerveDriver =
+    ## A Nerve Driver that sends requests over HTTP
     result = proc (req: JsonNode): Future[JsonNode] =
       let msg = newJsObject()
       msg["method"] = cstring"POST"
@@ -31,6 +33,7 @@ else:
 import websockets
 
 proc newWsDriver*(ws: WebSocket): NerveDriver =
+  ## A Nerve Driver that sends requests over a websocket
   result = proc (req: JsonNode): Future[JsonNode] =
       let id = $ genId()
       req["id"] = % id
