@@ -35,14 +35,20 @@ proc rpcServiceType*(name: string, procs: seq[NimNode]): NimNode =
     type `typeName`* = object of RpcServiceInst
   result[0][2][2] = procFields
 
-proc rpcServiceObject*(name: string, procs: Table[string, NimNode], kind: RpcServiceKind): NimNode =
+proc rpcServiceObject*(name: string, procs: Table[string, NimNode], kind: RpcServiceKind, uri: string): NimNode =
   let typeName = rpcServiceName(name)
   let kindName = ident($kind)
+  let routerName = rpcRouterProcName(name)
   result = quote do:
-    `typeName`(kind: `kindName`)
+    block:
+      var service = `typeName`(kind: `kindName`, uri: `uri`)
+      when `kindName` == rskServer:
+        service.nerveStrRpcRouter = proc (req: string): Future[JsonNode] = `routerName`(service, req)
+        service.nerveJsonRpcRouter = proc (req: JsonNode): Future[JsonNode] = `routerName`(service, req)
+      service
   for pName in procs.keys:
     var field = newColonExpr(procs[pName][0].basename, ident(pName))
-    result.add(field)
+    result[1][0][0][2].add(field)
 
 proc paramType*(param: NimNode): NimNode =
   # Either returns the type node of the param

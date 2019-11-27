@@ -24,7 +24,7 @@ proc unboxExpression(param: Table[string, NimNode], requestSym: NimNode): NimNod
     result = quote do:
       nerveUnboxParameter[`ntype`](`requestSym`, `nameStr`)
 
-proc procWrapper(serverSym, requestSym, p: NimNode): NimNode =
+proc procWrapper(serverSym, requestSym, responseSym, p: NimNode): NimNode =
   # This wrapper gets the parameters from the request and uses them to invoke the proc
   result = nnkStmtList.newTree()
   var methodCall = nnkCall.newTree(nnkDotExpr.newTree(serverSym, p.name))
@@ -40,16 +40,22 @@ proc procWrapper(serverSym, requestSym, p: NimNode): NimNode =
 
   # Invoke the method with the params, convert to json, and return response
   result.add(quote do:
-      result["result"] = % await `methodCall`
+      `responseSym`["result"] = block:
+        let future = `methodCall`
+        when $typeof(future) != "Future[system.void]":
+          % await future
+        else:
+          await future
+          newJNull()
   )
 
-proc dispatch(procs: seq[NimNode], serverSym, methodSym, requestSym: NimNode): NimNode =
+proc dispatch(procs: seq[NimNode], serverSym, methodSym, requestSym, responseSym: NimNode): NimNode =
   # Create the case statement used to dispatch proc
   result = nnkCaseStmt.newTree(methodSym)
 
   for p in procs:
     # Add the branch that dispatches the proc
-    let wrapper = procWrapper(serverSym, requestSym, p)
+    let wrapper = procWrapper(serverSym, requestSym, responseSym, p)
     result.add(
       nnkOfBranch.newTree(
         dispatchName(p),
@@ -73,40 +79,40 @@ proc serverDispatch*(name: string, procs: seq[NimNode]): NimNode =
     serverSym = ident("server")
     serviceType = rpcServiceName(name)
     requestSym = ident("request") # The request parameter
+    responseSym = ident("response")
     routerSym = rpcRouterProcName(name)
-    routerName = routerSym.strVal()
 
-  let dispatchStatement = dispatch(procs, serverSym, methodSym, requestSym)
+  let dispatchStatement = dispatch(procs, serverSym, methodSym, requestSym, responseSym)
   let enumDeclaration = enumDeclaration(enumSym, procs)
 
   result = newStmtList()
 
   result.add(quote do:
     `enumDeclaration`
-    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: JsObject): Future[JsObject] {.async.} =
+    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: JsonNode): Future[JsonNode] {.async.} =
       assert(`serverSym`.kind == rskServer, "Only Nerve Servers can do routing")
-      result = newNerveResponse()
+      var `responseSym` = newNerveResponse()
+      `responseSym`["id"] = if `requestSym`.hasKey("id"): `requestSym`["id"] else: newJNull()
       if not nerveValidateRequest(`requestSym`):
-        result["id"] = if `requestSym`.hasKey("id"): `requestSym`["id"] else: newJNull()
-        result["error"] = newNerveError(-32600, "Invalid Request")
+        `responseSym`["error"] = newNerveError(-32600, "Invalid Request")
       try:
         let `methodSym` = nerveGetMethod[`enumSym`](`requestSym`)
         `dispatchStatement`
       except DispatchError as e:
-        result["error"] = newNerveError(-32601, "Method not found", e)
+        `responseSym`["error"] = newNerveError(-32601, "Method not found", e)
       except ParameterError as e:
-        result["error"] = newNerveError(-32602, "Invalid params", e)
+        `responseSym`["error"] = newNerveError(-32602, "Invalid params", e)
       except CatchableError as e:
-        result["error"] = newNerveError(-32000, "Server error", e)
+        `responseSym`["error"] = newNerveError(-32000, "Server error", e)
+      result = `responseSym`
 
-    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: string): Future[JsObject] =
+    proc `routerSym`*(`serverSym`: `serviceType`,`requestSym`: string): Future[JsonNode] =
       assert(`serverSym`.kind == rskServer, "Only Nerve Servers can do routing")
       try:
         let requestJson = parseJson(`requestSym`)
         result = `routerSym`(`serverSym`, requestJson)
       except CatchableError as e:
-        result = newFuture[JsObject](`routerName`)
         var response = newNerveResponse()
         response["error"] = newNerveError(-32700, "Parse error", e)
-        result.complete(response)
+        result = futureWrap(response)
   )

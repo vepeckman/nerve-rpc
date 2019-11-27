@@ -1,5 +1,5 @@
-import strutils, sequtils
-import web, promises, common
+import strutils, sequtils, json
+import common
 when not defined(js):
   import os
 
@@ -8,14 +8,15 @@ type
   DispatchError* = ref object of CatchableError
   ParameterError* = ref object of CatchableError
 
-when not defined(js):
-  proc nerveValidateRequest*(req: JsObject): bool =
-    req.hasKey("jsonrpc") and req["jsonrpc"].getStr() == "2.0" and req.hasKey("id")
-else:
-  proc nerveValidateRequest*(req: JsObject): bool =
-    req.hasOwnProperty("jsonrpc") and (req["jsonrpc"].to(cstring) == "2.0") and req.hasOwnProperty("id")
+#TODO: clean up this file
 
-proc nerveGetMethod*[T: enum](req: JsObject): T =
+proc `%`*(x: void): JsonNode =
+  result = newJNull()
+
+proc nerveValidateRequest*(req: JsonNode): bool =
+  req.hasKey("jsonrpc") and req["jsonrpc"].getStr() == "2.0" and req.hasKey("id")
+
+proc nerveGetMethod*[T: enum](req: JsonNode): T =
   try:
     parseEnum[T](dispatchPrefix & req["method"].getStr())
   except:
@@ -23,7 +24,7 @@ proc nerveGetMethod*[T: enum](req: JsObject): T =
               else: "Request missing method field"
     raise DispatchError(msg: msg, parent: getCurrentException())
 
-proc nerveUnboxParameter*[T](req: JsObject, param: string, default: T): T =
+proc nerveUnboxParameter*[T](req: JsonNode, param: string, default: T): T =
   try:
     return if req["params"].hasKey(param): req["params"][param].to(T)
            else: default
@@ -31,7 +32,7 @@ proc nerveUnboxParameter*[T](req: JsObject, param: string, default: T): T =
     let msg = "Error in param '" & param & "': " & getCurrentExceptionMsg()
     raise ParameterError(msg: msg, parent: getCurrentException())
 
-proc nerveUnboxParameter*[T](req: JsObject, param: string): T =
+proc nerveUnboxParameter*[T](req: JsonNode, param: string): T =
   try:
     return req["params"][param].to(T)
   except:
@@ -40,16 +41,16 @@ proc nerveUnboxParameter*[T](req: JsObject, param: string): T =
 
 when not defined(js):
 
-  proc newNerveResponse*(): JsObject =
+  proc newNerveResponse*(): JsonNode =
     %* {"jsonrpc": "2.0", "id": newJNull()}
 
-  proc newNerveError*(code: int, message: string): JsObject =
+  proc newNerveError*(code: int, message: string): JsonNode =
     %* {
       "code": code,
       "message": message
     }
 
-  proc newNerveError*(code: int, message: string, e: ref CatchableError): JsObject =
+  proc newNerveError*(code: int, message: string, e: ref CatchableError): JsonNode =
     let dir = getCurrentDir()
     let stackTrace = e.getStackTraceEntries()
       .filterIt(`$`(it.filename).find(dir) != -1 and 
@@ -67,20 +68,20 @@ when not defined(js):
 
 else:
 
-  proc newNerveResponse*(): JsObject =
-    result = newJsObject()
-    result["jsonrpc"] = cstring"2.0"
-    result["id"] = jsNull
+  proc newNerveResponse*(): JsonNode =
+    result = newJObject()
+    result["jsonrpc"] = % "2.0"
+    result["id"] = % newJNull()
 
-  proc newNerveError*(code: int, message: string): JsObject =
-    result = newJsObject()
-    result["code"] = code
-    result["message"] = message
+  proc newNerveError*(code: int, message: string): JsonNode =
+    result = newJObject()
+    result["code"] = % code
+    result["message"] = % message
 
-  proc newNerveError*(code: int, message: string, e: ref CatchableError): JsObject =
-    result = newJsObject()
-    result["code"] = code
-    result["message"] = message
-    result["data"] = newJsObject()
-    result["data"]["msg"] = e.msg
-    result["data"]["stackTrace"] = getStackTrace()
+  proc newNerveError*(code: int, message: string, e: ref CatchableError): JsonNode =
+    result = newJObject()
+    result["code"] = % code
+    result["message"] = % message
+    result["data"] = newJObject()
+    result["data"]["msg"] = % e.msg
+    result["data"]["stackTrace"] = % getStackTrace()
